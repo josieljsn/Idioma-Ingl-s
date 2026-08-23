@@ -740,7 +740,17 @@ const db = firebase.firestore();
 function slug(name){ return name.toLowerCase().trim().replace(/[^a-z0-9à-ú ]/gi,'').replace(/\s+/g,'-').slice(0,40); }
 
 async function setShared(key,val){
-  try{ await db.collection('ranking').doc(slug(key)).set(val); }catch(e){ console.error('Erro ao salvar ranking:', e); }
+  try{
+    const ref = db.collection('ranking').doc(slug(key));
+    const current = await ref.get();
+    if(current.exists){
+      const prev = current.data();
+      const better = (val.wordsLearned > prev.wordsLearned) ||
+        (val.wordsLearned === prev.wordsLearned && val.completions > prev.completions);
+      if(!better) return; // mantém o recorde anterior, que é maior ou igual
+    }
+    await ref.set(val);
+  }catch(e){ console.error('Erro ao salvar ranking:', e); }
 }
 
 async function loadLeaderboard(){
@@ -799,18 +809,25 @@ async function renderStart(){
   panel.innerHTML = `<div class="spin">Carregando ranking...</div>`;
   const stats = (await getPersonal('stats')) || {attempts:0,completions:0,bestPhase:0,bestStage:0};
   const board = await loadLeaderboard();
+  const checkpointIdx = getCheckpointIdx(stats);
+  const hasCheckpoint = checkpointIdx > 0;
+  const checkpointPhase = hasCheckpoint ? phaseOf(checkpointIdx).phaseIndex+1 : 0;
   panel.innerHTML = `
     <div class="center">
       <div class="tag vocab">Modo clássico</div>
       <h2 style="margin:6px 0 8px;">Olá, ${state.player.name}! Pronta(o) para virar fluente?</h2>
-      <p class="sub" style="margin-bottom:0;">${TOTAL_WORDS} palavras em 6 fases + 10 expressões do cotidiano.<br><b>Errou uma pergunta? A trilha inteira reinicia.</b> Zere o jogo para aprender todas as palavras. 😅</p>
+      <p class="sub" style="margin-bottom:0;">${TOTAL_WORDS} palavras em 6 fases + 10 expressões do cotidiano.<br><b>Errou uma pergunta? Você volta ao início da fase atual, não da trilha inteira.</b> Zere o jogo para aprender todas as palavras. 😅</p>
     </div>
     <div class="stats-row">
       <div class="stat-card"><b>${stats.bestPhase}/6</b><span>Melhor fase</span></div>
       <div class="stat-card"><b>${stats.attempts}</b><span>Tentativas</span></div>
       <div class="stat-card"><b>${stats.completions}</b><span>Trilhas zeradas</span></div>
     </div>
-    <button class="btn btn-primary btn-block" onclick="startGame()">▶ Iniciar jogo</button>
+    ${hasCheckpoint
+      ? `<button class="btn btn-primary btn-block" onclick="startGame(${checkpointIdx})">⏩ Continuar de onde parei (Fase ${checkpointPhase})</button>
+         <button class="btn btn-ghost btn-block" style="margin-top:10px;" onclick="startGame(0)">🔄 Jogar do início</button>`
+      : `<button class="btn btn-primary btn-block" onclick="startGame(0)">▶ Iniciar jogo</button>`
+    }
     <button class="btn btn-ghost btn-block" style="margin-top:10px;" onclick="switchPlayer()">Trocar jogador</button>
     <div class="leaderboard">
       <h3>🏆 Ranking — palavras aprendidas (fase mais avançada)</h3>
@@ -839,6 +856,14 @@ async function switchPlayer(){
 
 function phaseOf(idx){ return phaseBounds.find(b=> idx>=b.start && idx<=b.end); }
 
+/* Retorna o índice do estágio onde a fase em andamento começa, para permitir continuar sem voltar ao início */
+function getCheckpointIdx(stats){
+  if(!stats || !stats.bestStage || stats.bestStage<=0) return 0;
+  const idx = Math.min(stats.bestStage+1, TOTAL-1);
+  const pb = phaseOf(idx);
+  return pb.start;
+}
+
 function renderHUD(){
   const pb = phaseOf(state.idx);
   const pct = Math.round((state.idx/TOTAL)*100);
@@ -861,8 +886,8 @@ function renderHUD(){
   `;
 }
 
-async function startGame(){
-  state = {idx:0,score:0,answered:false,player:state.player};
+async function startGame(fromIdx=0){
+  state = {idx:fromIdx,score:0,answered:false,player:state.player};
   const stats = (await getPersonal('stats')) || {attempts:0,completions:0,bestPhase:0,bestStage:0};
   stats.attempts++; await saveStats(stats);
   renderStage();
@@ -957,13 +982,12 @@ async function gameOver(){
   panel.innerHTML = `
     <div class="big-icon">💥</div>
     <p class="result-title">Ops! Você errou.</p>
-    <p class="result-sub">Você chegou até a fase ${pb.phaseIndex+1}/6 (${PHASES[pb.phaseIndex].name}), com ${state.score} pontos.<br>No modo clássico, um erro reinicia a trilha do início — bora tentar de novo?</p>
+    <p class="result-sub">Você chegou até a fase ${pb.phaseIndex+1}/6 (${PHASES[pb.phaseIndex].name}), com ${state.score} pontos.<br>Sem problema — na tela inicial você escolhe entre continuar de onde parou ou recomeçar do zero.</p>
     <div class="stats-row">
       <div class="stat-card"><b>${stats.bestPhase+1}/6</b><span>Seu recorde</span></div>
       <div class="stat-card"><b>${stats.attempts}</b><span>Tentativas</span></div>
     </div>
-    <button class="btn btn-primary btn-block" onclick="startGame()">🔄 Reiniciar do início</button>
-    <button class="btn btn-ghost btn-block" style="margin-top:10px;" onclick="renderStart()">Ver ranking</button>
+    <button class="btn btn-primary btn-block" onclick="renderStart()">Ver opções</button>
   `;
 }
 
