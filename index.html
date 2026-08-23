@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Trilha da Fluência — 500 Palavras em Inglês</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <style>
 :root{
   --bg:#101a2e; --bg2:#182648;
@@ -108,7 +110,7 @@ footer{text-align:center;color:#8f8874;font-size:12px;margin-top:20px;}
     <p>6 fases · +500 palavras e expressões do dia a dia — erre uma vez e volte ao início!</p>
   </div>
   <div class="panel" id="panel"><div class="spin">Carregando...</div></div>
-  <footer>Artefato salva seu cadastro e ranking automaticamente neste dispositivo. O ranking é visível para quem jogar este mesmo jogo.</footer>
+  <footer>Seu cadastro fica salvo neste dispositivo. O ranking é compartilhado e visível para todos que jogarem esta trilha.</footer>
 </div>
 
 <script>
@@ -719,23 +721,38 @@ const TOTAL = stages.length;
 const TOTAL_WORDS = PHASES.reduce((a,p)=>a+p.words.length,0);
 
 /* ================= STORAGE ================= */
-async function getPersonal(key){ try{ const r = await window.storage.get(key,false); return r?JSON.parse(r.value):null; }catch(e){ return null; } }
-async function setPersonal(key,val){ try{ await window.storage.set(key, JSON.stringify(val), false); }catch(e){} }
-async function setShared(key,val){ try{ await window.storage.set(key, JSON.stringify(val), true); }catch(e){} }
-async function listShared(prefix){ try{ const r = await window.storage.list(prefix,true); return r?r.keys:[]; }catch(e){ return []; } }
-async function getShared(key){ try{ const r = await window.storage.get(key,true); return r?JSON.parse(r.value):null; }catch(e){ return null; } }
+/* Dados pessoais (perfil/estatísticas do jogador): ficam no navegador dele (localStorage) */
+async function getPersonal(key){ try{ const v = localStorage.getItem('trilha:'+key); return v?JSON.parse(v):null; }catch(e){ return null; } }
+async function setPersonal(key,val){ try{ localStorage.setItem('trilha:'+key, JSON.stringify(val)); }catch(e){} }
+
+/* Ranking compartilhado: fica no Firestore, visível para todos os jogadores */
+const firebaseConfig = {
+  apiKey: "AIzaSyCZLMj7cWoLCIztIzVUe6RjLWLe-4mznzU",
+  authDomain: "trilha-da-fluencia-ea6b4.firebaseapp.com",
+  projectId: "trilha-da-fluencia-ea6b4",
+  storageBucket: "trilha-da-fluencia-ea6b4.firebasestorage.app",
+  messagingSenderId: "303997743444",
+  appId: "1:303997743444:web:f9c07681184ec2018c18c1"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
 function slug(name){ return name.toLowerCase().trim().replace(/[^a-z0-9à-ú ]/gi,'').replace(/\s+/g,'-').slice(0,40); }
 
+async function setShared(key,val){
+  try{ await db.collection('ranking').doc(slug(key)).set(val); }catch(e){ console.error('Erro ao salvar ranking:', e); }
+}
+
 async function loadLeaderboard(){
-  const keys = await listShared('ranking:');
-  const rows = [];
-  for(const k of keys.slice(0,25)){
-    const v = await getShared(k);
-    if(v) rows.push(v);
+  try{
+    const snap = await db.collection('ranking').orderBy('wordsLearned','desc').limit(25).get();
+    const rows = snap.docs.map(d=>d.data());
+    rows.sort((a,b)=> (b.wordsLearned-a.wordsLearned) || (b.completions-a.completions));
+    return rows.slice(0,10);
+  }catch(e){
+    console.error('Erro ao carregar ranking:', e);
+    return [];
   }
-  rows.sort((a,b)=> (b.wordsLearned-a.wordsLearned) || (b.completions-a.completions));
-  return rows.slice(0,10);
 }
 
 /* ================= STATE ================= */
@@ -837,7 +854,7 @@ async function updateBest(){
   if(state.idx > stats.bestStage) stats.bestStage = state.idx;
   await setPersonal('stats', stats);
   const wordsLearned = Math.min(state.idx, TOTAL_WORDS);
-  await setShared('ranking:'+slug(state.player.name), {
+  await setShared(state.player.name, {
     name: state.player.name, wordsLearned, bestPhase: stats.bestPhase+1, completions: stats.completions, date: new Date().toISOString()
   });
 }
@@ -933,7 +950,7 @@ async function victory(){
   const stats = (await getPersonal('stats')) || {attempts:0,completions:0,bestPhase:0,bestStage:0};
   stats.completions++; stats.bestPhase = 5; stats.bestStage = TOTAL;
   await setPersonal('stats', stats);
-  await setShared('ranking:'+slug(state.player.name), {
+  await setShared(state.player.name, {
     name: state.player.name, wordsLearned: TOTAL_WORDS, bestPhase: 6, completions: stats.completions, date: new Date().toISOString()
   });
   panel.innerHTML = `
