@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trilha da Fluência — 500 Palavras em Inglês</title>
+<style>
+:root{
+  --bg:#101a2e; --bg2:#182648;
+  --card:#f4ecd8; --card-line:#d8c9a3; --ink:#1c2340; --muted:#6b6552;
+  --gold:#e0a83e; --coral:#e2604f; --green:#3fa77f; --blue:#3a6ea5;
+  --shadow:0 10px 30px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(224,168,62,.12), transparent 40%),
+    radial-gradient(circle at 85% 90%, rgba(58,110,165,.18), transparent 45%),
+    linear-gradient(160deg, var(--bg), var(--bg2));
+  font-family:"Segoe UI","Trebuchet MS",system-ui,sans-serif;
+  color:#eee8d6; display:flex; justify-content:center; padding:24px 14px 60px;
+}
+.wrap{width:100%;max-width:820px;}
+.brand{text-align:center;margin-bottom:18px;}
+.brand .stamp{display:inline-block;border:3px solid var(--gold);color:var(--gold);padding:6px 18px;border-radius:999px;font-weight:700;letter-spacing:2px;font-size:12px;text-transform:uppercase;transform:rotate(-2deg);}
+.brand h1{font-size:clamp(24px,5vw,36px);margin:10px 0 4px;}
+.brand p{color:#b9b3a0;margin:0;font-size:14px;}
+
+.panel{background:var(--card);color:var(--ink);border-radius:18px;box-shadow:var(--shadow);padding:26px 24px;position:relative;overflow:hidden;min-height:120px;}
+.panel::before{content:"";position:absolute;top:0;left:0;right:0;height:6px;background:repeating-linear-gradient(90deg,var(--gold) 0 14px, transparent 14px 24px);}
+
+.hud{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+.hud .stat{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;}
+.hud .stat span{display:block;font-size:17px;color:var(--ink);letter-spacing:0;text-transform:none;}
+.phase-track{display:flex;gap:4px;margin-bottom:6px;}
+.phase-dot{flex:1;height:8px;border-radius:4px;background:#e2d6ae;overflow:hidden;}
+.phase-dot .fill{height:100%;background:var(--green);width:0%;transition:width .3s;}
+.phase-dot.current .fill{background:var(--gold);}
+.progress-track{height:8px;background:#e2d6ae;border-radius:999px;overflow:hidden;margin:6px 0 20px;border:1px solid var(--card-line);}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--blue));width:0%;transition:width .4s ease;}
+
+input[type=text]{width:100%;padding:13px 14px;border-radius:10px;border:2px solid var(--card-line);font-size:15px;font-family:inherit;margin-bottom:12px;}
+.btn{border:none;border-radius:10px;padding:13px 22px;font-size:15px;font-weight:700;cursor:pointer;transition:transform .12s,box-shadow .12s;}
+.btn:active{transform:scale(.97);}
+.btn-primary{background:var(--blue);color:#fff;}
+.btn-primary:hover{box-shadow:0 6px 14px rgba(58,110,165,.4);}
+.btn-gold{background:var(--gold);color:#26200f;}
+.btn-ghost{background:transparent;border:2px solid var(--ink);color:var(--ink);}
+.btn-block{width:100%;}
+.center{text-align:center;}
+
+.stats-row{display:flex;gap:12px;justify-content:center;margin:16px 0;flex-wrap:wrap;}
+.stat-card{background:#fff8e6;border:1px solid var(--card-line);border-radius:12px;padding:10px 16px;min-width:100px;text-align:center;}
+.stat-card b{display:block;font-size:20px;color:var(--blue);}
+.stat-card span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+
+.tag{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:4px 10px;border-radius:999px;margin-bottom:12px;}
+.tag.vocab{background:#dfeee5;color:var(--green);}
+.tag.expr{background:#fde3dc;color:var(--coral);}
+.tag.read{background:#e0eaf5;color:var(--blue);}
+
+.question{font-size:19px;font-weight:700;margin:0 0 6px;line-height:1.4;}
+.sub{color:var(--muted);font-size:13px;margin-bottom:14px;}
+.options{display:grid;gap:10px;}
+.opt{text-align:left;padding:14px 16px;border-radius:10px;border:2px solid var(--card-line);background:#fffdf5;font-size:15px;cursor:pointer;color:var(--ink);transition:border-color .15s,background .15s;}
+.opt:hover{border-color:var(--blue);}
+.opt.correct{background:#dcf3e7;border-color:var(--green);}
+.opt.wrong{background:#fbdbd4;border-color:var(--coral);}
+.opt[disabled]{cursor:default;}
+
+.feedback{margin-top:16px;padding:14px;border-radius:10px;font-size:14px;line-height:1.5;}
+.feedback.ok{background:#dcf3e7;color:#1c4d38;}
+.feedback.bad{background:#fbdbd4;color:#5c2018;}
+
+.text-title{font-size:19px;font-weight:700;margin-bottom:4px;}
+.hint{font-size:13px;color:var(--muted);margin-bottom:14px;}
+.paragraph{background:#fffdf5;border:2px solid var(--card-line);border-radius:12px;padding:18px;font-size:16px;line-height:2;}
+.word{padding:2px 3px;border-radius:5px;cursor:pointer;}
+.word.circled{background:var(--gold);color:#26200f;box-shadow:0 0 0 2px var(--gold);}
+textarea{width:100%;min-height:80px;margin-top:16px;padding:12px;border-radius:10px;border:2px solid var(--card-line);font-family:inherit;font-size:14px;resize:vertical;}
+.summary-box{margin-top:14px;background:#e0eaf5;border-radius:10px;padding:14px;font-size:14px;line-height:1.5;display:none;}
+.summary-box.show{display:block;}
+
+.actions{margin-top:20px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;}
+.big-icon{font-size:52px;text-align:center;margin-bottom:6px;}
+.result-title{text-align:center;font-size:24px;font-weight:800;margin:0 0 6px;}
+.result-sub{text-align:center;color:var(--muted);margin-bottom:16px;font-size:14px;}
+
+.leaderboard{margin-top:18px;background:#fffdf5;border:2px solid var(--card-line);border-radius:12px;overflow:hidden;}
+.leaderboard h3{margin:0;padding:12px 16px;background:#e2d6ae;font-size:13px;text-transform:uppercase;letter-spacing:1px;}
+.lb-row{display:flex;justify-content:space-between;padding:10px 16px;font-size:14px;border-top:1px solid var(--card-line);}
+.lb-row b{color:var(--blue);}
+.lb-row.me{background:#fdf3d8;}
+.lb-empty{padding:14px 16px;font-size:13px;color:var(--muted);}
+
+footer{text-align:center;color:#8f8874;font-size:12px;margin-top:20px;}
+.spin{opacity:.6;text-align:center;padding:20px;font-size:14px;}
+@media(max-width:480px){.panel{padding:20px 16px;} .question{font-size:17px;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <span class="stamp">Everyday English</span>
+    <h1>🗺️ Trilha da Fluência</h1>
+    <p>6 fases · +500 palavras e expressões do dia a dia — erre uma vez e volte ao início!</p>
+  </div>
+  <div class="panel" id="panel"><div class="spin">Carregando...</div></div>
+  <footer>Artefato salva seu cadastro e ranking automaticamente neste dispositivo. O ranking é visível para quem jogar este mesmo jogo.</footer>
+</div>
+
+<script>
+/* ================= WORD BANKS (en|pt) ================= */
+const P1 = `house|casa
+home|lar
+room|cômodo, quarto
+kitchen|cozinha
+bathroom|banheiro
+bedroom|quarto de dormir
+living room|sala de estar
+door|porta
+window|janela
+floor|chão, andar
+wall|parede
+roof|telhado
+key|chave
+table|mesa
+chair|cadeira
+bed|cama
+sofa|sofá
+lamp|luminária
+mirror|espelho
+closet|armário
+shelf|prateleira
+towel|toalha
+soap|sabonete
+toothbrush|escova de dente
+shower|chuveiro
+sink|pia
+fridge|geladeira
+stove|fogão
+oven|forno
+microwave|micro-ondas
+plate|prato
+cup|xícara
+glass|copo
+fork|garfo
+knife|faca
+spoon|colher
+trash|lixo
+clean|limpar
+wash|lavar
+cook|cozinhar
+sleep|dormir
+wake up|acordar
+get up|levantar-se
+brush|escovar
+dress|vestir-se
+take a shower|tomar banho
+rest|descansar
+relax|relaxar
+routine|rotina
+schedule|agenda, horário
+alarm|despertador
+morning|manhã
+afternoon|tarde
+evening|entardecer, noite
+night|noite
+today|hoje
+tomorrow|amanhã
+yesterday|ontem
+week|semana
+month|mês
+year|ano
+hour|hora
+minute|minuto
+always|sempre
+never|nunca
+sometimes|às vezes
+usually|geralmente
+often|frequentemente
+open|abrir
+close|fechar
+turn on|ligar
+turn off|desligar
+light|luz
+dark|escuro
+quiet|silencioso
+noisy|barulhento
+comfortable|confortável
+messy|bagunçado
+tidy|arrumado
+neighbor|vizinho
+apartment|apartamento
+address|endereço
+rent|aluguel
+furniture|móveis
+blanket|cobertor
+pillow|travesseiro`;
+
+const P2 = `family|família
+mother|mãe
+father|pai
+parents|pais
+son|filho
+daughter|filha
+brother|irmão
+sister|irmã
+husband|marido
+wife|esposa
+child|criança
+children|crianças
+baby|bebê
+grandmother|avó
+grandfather|avô
+uncle|tio
+aunt|tia
+cousin|primo(a)
+friend|amigo(a)
+classmate|colega de classe
+boyfriend|namorado
+girlfriend|namorada
+marriage|casamento
+wedding|casamento (cerimônia)
+birthday|aniversário
+love|amor, amar
+like|gostar
+hate|odiar
+happy|feliz
+sad|triste
+angry|bravo, com raiva
+afraid|com medo
+scared|assustado
+nervous|nervoso
+excited|animado
+bored|entediado
+tired|cansado
+worried|preocupado
+proud|orgulhoso
+surprised|surpreso
+confused|confuso
+embarrassed|envergonhado
+jealous|com ciúmes
+lonely|solitário
+relaxed|relaxado
+confident|confiante
+shy|tímido
+friendly|amigável
+kind|gentil
+rude|grosseiro
+polite|educado
+honest|honesto
+funny|engraçado
+serious|sério
+smart|inteligente
+lazy|preguiçoso
+hardworking|trabalhador
+generous|generoso
+selfish|egoísta
+patient|paciente
+brave|corajoso
+strong|forte
+weak|fraco
+young|jovem
+old|velho
+tall|alto
+short|baixo
+thin|magro
+fat|gordo
+beautiful|bonito(a)
+handsome|bonito (homem)
+ugly|feio
+cute|fofo
+name|nome
+age|idade
+gender|gênero
+person|pessoa
+people|pessoas
+human|humano
+life|vida
+death|morte
+born|nascer
+grow up|crescer
+marry|casar-se
+divorce|divorciar-se
+trust|confiar
+respect|respeitar
+care|cuidar
+hug|abraço, abraçar
+smile|sorriso, sorrir
+cry|chorar
+laugh|rir
+feel|sentir
+feeling|sentimento`;
+
+const P3 = `job|emprego
+work|trabalho
+career|carreira
+company|empresa
+office|escritório
+boss|chefe
+employee|funcionário
+coworker|colega de trabalho
+colleague|colega
+meeting|reunião
+project|projeto
+deadline|prazo
+task|tarefa
+report|relatório
+email|e-mail
+phone call|ligação telefônica
+computer|computador
+laptop|notebook
+internet|internet
+file|arquivo
+document|documento
+print|imprimir
+appointment|compromisso
+interview|entrevista
+resume|currículo
+salary|salário
+promotion|promoção
+raise|aumento salarial
+contract|contrato
+team|equipe
+manager|gerente
+client|cliente
+customer|cliente (consumidor)
+business|negócio
+industry|indústria
+factory|fábrica
+warehouse|armazém
+department|departamento
+training|treinamento
+skill|habilidade
+experience|experiência
+degree|diploma, formação
+school|escola
+university|universidade
+college|faculdade
+class|aula, turma
+teacher|professor(a)
+student|estudante
+professor|professor universitário
+lesson|lição
+homework|dever de casa
+exam|prova
+test|teste
+grade|nota
+study|estudar
+learn|aprender
+teach|ensinar
+read|ler
+write|escrever
+book|livro
+notebook|caderno
+pen|caneta
+pencil|lápis
+paper|papel
+question|pergunta
+answer|resposta
+knowledge|conhecimento
+subject|matéria, assunto
+language|idioma
+English|inglês
+math|matemática
+science|ciência
+history|história
+library|biblioteca
+classroom|sala de aula
+graduate|formar-se, graduado
+scholarship|bolsa de estudos
+course|curso
+lecture|palestra
+presentation|apresentação
+goal|meta, objetivo
+plan|plano
+idea|ideia
+solution|solução
+problem|problema
+decision|decisão
+result|resultado`;
+
+const P4 = `food|comida
+meal|refeição
+breakfast|café da manhã
+lunch|almoço
+dinner|jantar
+snack|lanche
+fruit|fruta
+vegetable|vegetal, legume
+meat|carne
+chicken|frango
+fish|peixe
+rice|arroz
+bread|pão
+cheese|queijo
+egg|ovo
+milk|leite
+butter|manteiga
+sugar|açúcar
+salt|sal
+pepper|pimenta
+water|água
+juice|suco
+coffee|café
+tea|chá
+beer|cerveja
+wine|vinho
+restaurant|restaurante
+menu|cardápio
+waiter|garçom
+order|pedido, pedir
+bill|conta
+recipe|receita
+bake|assar
+fry|fritar
+boil|ferver
+taste|sabor, provar
+delicious|delicioso
+sweet|doce
+sour|azedo
+bitter|amargo
+spicy|apimentado
+fresh|fresco
+frozen|congelado
+store|loja
+supermarket|supermercado
+market|mercado
+shop|loja, fazer compras
+mall|shopping
+cashier|caixa (pessoa)
+cart|carrinho
+bag|sacola, bolsa
+receipt|nota fiscal, recibo
+price|preço
+discount|desconto
+sale|promoção
+cheap|barato
+expensive|caro
+pay|pagar
+cash|dinheiro (em espécie)
+card|cartão
+coin|moeda
+wallet|carteira
+budget|orçamento
+save|economizar
+spend|gastar
+borrow|pegar emprestado
+lend|emprestar
+debt|dívida
+loan|empréstimo
+bank|banco
+account|conta bancária
+income|renda
+tip|gorjeta
+change|troco
+shopping list|lista de compras
+ingredient|ingrediente
+portion|porção
+diet|dieta
+hungry|com fome
+thirsty|com sede
+full|satisfeito, cheio`;
+
+const P5 = `travel|viajar
+trip|viagem
+vacation|férias
+holiday|feriado, férias
+journey|jornada
+airport|aeroporto
+airplane|avião
+flight|voo
+ticket|passagem
+passport|passaporte
+luggage|bagagem
+suitcase|mala
+bus|ônibus
+train|trem
+subway|metrô
+taxi|táxi
+car|carro
+bike|bicicleta
+motorcycle|moto
+boat|barco
+ship|navio
+driver|motorista
+traffic|trânsito
+street|rua
+road|estrada
+avenue|avenida
+corner|esquina
+bridge|ponte
+building|prédio
+city|cidade
+town|cidade pequena
+village|vilarejo
+country|país
+map|mapa
+direction|direção
+north|norte
+south|sul
+east|leste
+west|oeste
+left|esquerda
+right|direita
+straight|em frente, reto
+near|perto
+far|longe
+hotel|hotel
+room service|serviço de quarto
+reservation|reserva
+check-in|check-in
+check-out|check-out
+tourist|turista
+guide|guia
+museum|museu
+park|parque
+beach|praia
+mountain|montanha
+lake|lago
+river|rio
+forest|floresta
+downtown|centro da cidade
+neighborhood|bairro
+station|estação
+stop|parada
+gate|portão de embarque
+platform|plataforma
+delay|atraso
+arrival|chegada
+departure|partida
+customs|alfândega
+visa|visto
+currency|moeda (dinheiro)
+exchange|câmbio
+souvenir|lembrança de viagem
+postcard|cartão-postal
+camera|câmera
+photo|foto
+adventure|aventura
+explore|explorar
+pack|fazer as malas
+unpack|desfazer as malas`;
+
+const P6 = `weather|clima, tempo
+rain|chuva
+snow|neve
+wind|vento
+storm|tempestade
+cloud|nuvem
+sun|sol
+sky|céu
+hot|quente
+cold|frio
+warm|morno
+cool|fresco
+season|estação do ano
+spring|primavera
+summer|verão
+autumn|outono
+winter|inverno
+temperature|temperatura
+forecast|previsão do tempo
+umbrella|guarda-chuva
+tree|árvore
+flower|flor
+grass|grama
+animal|animal
+dog|cachorro
+cat|gato
+bird|pássaro
+nature|natureza
+environment|meio ambiente
+earth|terra
+world|mundo
+universe|universo
+star|estrela
+moon|lua
+ocean|oceano
+sea|mar
+island|ilha
+go|ir
+come|vir
+do|fazer
+make|fazer, criar
+take|pegar, levar
+give|dar
+get|conseguir, obter
+put|colocar
+say|dizer
+tell|contar
+ask|perguntar
+help|ajudar
+need|precisar
+want|querer
+know|saber
+think|pensar
+believe|acreditar
+understand|entender
+remember|lembrar
+forget|esquecer
+try|tentar
+start|começar
+finish|terminar
+stop|parar
+continue|continuar
+wait|esperar
+find|encontrar
+lose|perder
+win|vencer, ganhar
+play|jogar, brincar
+watch|assistir
+listen|escutar
+hear|ouvir
+see|ver
+look|olhar
+show|mostrar
+use|usar
+bring|trazer
+keep|manter, guardar
+leave|sair, deixar
+arrive|chegar
+return|voltar, retornar
+change|mudar
+build|construir
+break|quebrar
+fix|consertar
+carry|carregar
+hold|segurar`;
+
+function parseBank(str){
+  return str.trim().split("\n").map(l=>{const [en,pt]=l.split("|");return{en:en.trim(),pt:pt.trim()};});
+}
+
+const exprData = [
+ {en:"piece of cake",pt:"algo muito fácil, moleza",s:"Don't worry, the test was a piece of cake."},
+ {en:"break the ice",pt:"quebrar o gelo (iniciar uma conversa)",s:"He told a joke to break the ice at the meeting."},
+ {en:"under the weather",pt:"se sentindo mal, meio doente",s:"I am feeling a bit under the weather today."},
+ {en:"give up",pt:"desistir",s:"Never give up on your dreams."},
+ {en:"look forward to",pt:"estar ansioso(a) esperando por algo",s:"I look forward to seeing you next week."},
+ {en:"make up my mind",pt:"decidir, tomar uma decisão",s:"I need to make up my mind about the job offer."},
+ {en:"figure out",pt:"descobrir, entender algo",s:"Can you help me figure out this problem?"},
+ {en:"come across",pt:"encontrar por acaso",s:"I came across an old photo of us yesterday."},
+ {en:"get along with",pt:"dar-se bem com alguém",s:"I get along with my coworkers very well."},
+ {en:"on time",pt:"pontualmente, na hora certa",s:"Please make sure you arrive on time."}
+];
+
+const PHASES = [
+ {name:"Casa & Rotina", icon:"🏠", words:parseBank(P1),
+  text:{title:"My Morning at Home",
+   p:"Every morning, I wake up early and make my bed. I take a shower, brush my teeth, and get dressed in my bedroom. Then I go to the kitchen and cook a quick breakfast. After breakfast, I clean the kitchen and check if the house is tidy before I turn off the lights and leave for work.",
+   sum:"Rotina matinal em casa: acordar, arrumar a cama, tomar banho, escovar os dentes, vestir-se, cozinhar o café da manhã, limpar a cozinha, verificar se a casa está arrumada e sair para o trabalho."}},
+ {name:"Família & Sentimentos", icon:"❤️", words:parseBank(P2),
+  text:{title:"My Family",
+   p:"My family is very important to me. I have a mother, a father, and two younger sisters. We are close, and we always support each other. Sometimes I feel tired or worried about work, but talking to my family makes me feel happy and confident again. My grandmother is kind and patient, and she always makes me smile.",
+   sum:"Fala sobre a importância da família (mãe, pai e duas irmãs mais novas), que se apoia mutuamente; mesmo cansado ou preocupado, conversar com a família traz felicidade e confiança, e a avó gentil e paciente sempre faz a pessoa sorrir."}},
+ {name:"Trabalho & Estudos", icon:"💼", words:parseBank(P3),
+  text:{title:"My Job and My Studies",
+   p:"I work at a small company as a project manager. Every day, I check my email, attend meetings, and help my team finish their tasks before the deadline. In the evening, I study English for one hour to improve my skills. Learning a new language takes time, but practice and patience bring good results.",
+   sum:"Descreve a rotina de um gerente de projetos: checar e-mails, participar de reuniões e ajudar a equipe a cumprir prazos; à noite, estuda inglês por uma hora, reforçando que prática e paciência trazem bons resultados no aprendizado."}},
+ {name:"Comida & Compras", icon:"🛒", words:parseBank(P4),
+  text:{title:"Grocery Shopping and Dinner",
+   p:"On Saturday, I went to the supermarket to buy food for the week. I bought fruit, vegetables, chicken, rice, and bread. The prices were a bit expensive, but I found a good discount on cheese. At the restaurant later, I ordered a delicious spicy dish and paid the bill with my card, leaving a small tip for the waiter.",
+   sum:"Relata uma ida ao supermercado para comprar comida da semana (fruta, legumes, frango, arroz, pão), com preços um pouco caros mas bom desconto no queijo; depois, num restaurante, pediu um prato apimentado e delicioso, pagou a conta no cartão e deixou gorjeta."}},
+ {name:"Viagem & Cidade", icon:"✈️", words:parseBank(P5),
+  text:{title:"A Trip to the Coast",
+   p:"Last month, my family and I took a trip to a small city near the beach. We arrived at the airport, picked up our luggage, and took a taxi to the hotel. During the day, we explored the downtown area, visited a museum, and walked along the river. On the last day, we packed our suitcases and returned home, tired but happy.",
+   sum:"Conta uma viagem em família a uma cidade litorânea: chegada ao aeroporto, retirada da bagagem, táxi até o hotel, exploração do centro, visita a um museu e caminhada à beira do rio; no último dia, fizeram as malas e voltaram para casa, cansados mas felizes."}},
+ {name:"Natureza, Clima & Verbos", icon:"🌦️", words:parseBank(P6),
+  text:{title:"A Quiet Day",
+   p:"Yesterday, the weather was cold and windy, so I decided to stay home and read a book. I looked out the window and watched the rain fall on the trees. Later, the sky became clear, and I could see the stars. I tried to remember everything I learned this year, and I felt proud of how much progress I made.",
+   sum:"Descreve um dia frio e ventoso em que a pessoa ficou em casa lendo, observou a chuva pela janela e depois o céu limpo com estrelas à noite; refletiu sobre o quanto aprendeu no ano e sentiu orgulho do próprio progresso."},
+  extra:exprData}
+];
+
+/* ================= HELPERS ================= */
+function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function pickDistractors(pool,correctVal,key,n){
+  const vals = pool.map(x=>x[key]).filter(v=>v!==correctVal);
+  return shuffle(vals).slice(0,n);
+}
+function buildVocabStage(item,pool,idx){
+  let question,correct,options;
+  if(idx%2===0){
+    question = `Qual é a tradução da palavra <b>"${item.en}"</b>?`;
+    correct = item.pt;
+    options = shuffle([correct,...pickDistractors(pool,correct,'pt',3)]);
+  } else {
+    question = `Qual é a palavra em inglês para <b>"${item.pt.split(',')[0]}"</b>?`;
+    correct = item.en;
+    options = shuffle([correct,...pickDistractors(pool,correct,'en',3)]);
+  }
+  return {kind:'vocab',tag:'Vocabulário',question,correct,options};
+}
+function buildExprStage(item,pool){
+  const question = `O que significa a expressão <b>"${item.en}"</b>?<br><span class="sub" style="display:block;margin-top:6px;">Exemplo: <i>"${item.s}"</i></span>`;
+  const correct = item.pt;
+  const options = shuffle([correct,...pickDistractors(pool,correct,'pt',3)]);
+  return {kind:'expr',tag:'Expressão',question,correct,options};
+}
+function buildReadStage(t,phaseName){
+  return {kind:'read',tag:'Leitura — '+phaseName,title:t.title,p:t.p,sum:t.sum};
+}
+
+/* Build full stage list + phase boundaries */
+let stages = [];
+let phaseBounds = []; // {startIdx, endIdx, phaseIndex}
+PHASES.forEach((ph,pi)=>{
+  const start = stages.length;
+  ph.words.forEach((w,i)=> stages.push({...buildVocabStage(w,ph.words,i), phaseIndex:pi}));
+  stages.push({...buildReadStage(ph.text,ph.name), phaseIndex:pi});
+  if(ph.extra){ ph.extra.forEach(e=> stages.push({...buildExprStage(e,ph.extra), phaseIndex:pi})); }
+  phaseBounds.push({start, end:stages.length-1, phaseIndex:pi});
+});
+const TOTAL = stages.length;
+const TOTAL_WORDS = PHASES.reduce((a,p)=>a+p.words.length,0);
+
+/* ================= STORAGE ================= */
+async function getPersonal(key){ try{ const r = await window.storage.get(key,false); return r?JSON.parse(r.value):null; }catch(e){ return null; } }
+async function setPersonal(key,val){ try{ await window.storage.set(key, JSON.stringify(val), false); }catch(e){} }
+async function setShared(key,val){ try{ await window.storage.set(key, JSON.stringify(val), true); }catch(e){} }
+async function listShared(prefix){ try{ const r = await window.storage.list(prefix,true); return r?r.keys:[]; }catch(e){ return []; } }
+async function getShared(key){ try{ const r = await window.storage.get(key,true); return r?JSON.parse(r.value):null; }catch(e){ return null; } }
+
+function slug(name){ return name.toLowerCase().trim().replace(/[^a-z0-9à-ú ]/gi,'').replace(/\s+/g,'-').slice(0,40); }
+
+async function loadLeaderboard(){
+  const keys = await listShared('ranking:');
+  const rows = [];
+  for(const k of keys.slice(0,25)){
+    const v = await getShared(k);
+    if(v) rows.push(v);
+  }
+  rows.sort((a,b)=> (b.wordsLearned-a.wordsLearned) || (b.completions-a.completions));
+  return rows.slice(0,10);
+}
+
+/* ================= STATE ================= */
+let state = { idx:0, score:0, answered:false, player:null };
+
+/* ================= RENDER ================= */
+const panel = document.getElementById('panel');
+
+async function boot(){
+  state.player = await getPersonal('profile');
+  renderStart();
+}
+
+async function renderStart(){
+  if(!state.player){
+    panel.innerHTML = `
+      <div class="center">
+        <div class="tag vocab">Cadastro rápido</div>
+        <h2 style="margin:6px 0 8px;">Como podemos te chamar?</h2>
+        <p class="sub">Seu nome aparece no ranking desta trilha.</p>
+      </div>
+      <input type="text" id="nameInput" maxlength="24" placeholder="Seu nome ou apelido">
+      <button class="btn btn-primary btn-block" onclick="registerPlayer()">Cadastrar e continuar</button>
+    `;
+    return;
+  }
+  panel.innerHTML = `<div class="spin">Carregando ranking...</div>`;
+  const stats = (await getPersonal('stats')) || {attempts:0,completions:0,bestPhase:0,bestStage:0};
+  const board = await loadLeaderboard();
+  panel.innerHTML = `
+    <div class="center">
+      <div class="tag vocab">Modo clássico</div>
+      <h2 style="margin:6px 0 8px;">Olá, ${state.player.name}! Pronta(o) para virar fluente?</h2>
+      <p class="sub" style="margin-bottom:0;">${TOTAL_WORDS} palavras em 6 fases + 10 expressões do cotidiano.<br><b>Errou uma pergunta? A trilha inteira reinicia.</b> Zere o jogo para aprender todas as palavras. 😅</p>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card"><b>${stats.bestPhase}/6</b><span>Melhor fase</span></div>
+      <div class="stat-card"><b>${stats.attempts}</b><span>Tentativas</span></div>
+      <div class="stat-card"><b>${stats.completions}</b><span>Trilhas zeradas</span></div>
+    </div>
+    <button class="btn btn-primary btn-block" onclick="startGame()">▶ Iniciar jogo</button>
+    <button class="btn btn-ghost btn-block" style="margin-top:10px;" onclick="switchPlayer()">Trocar jogador</button>
+    <div class="leaderboard">
+      <h3>🏆 Ranking — palavras aprendidas (fase mais avançada)</h3>
+      ${board.length? board.map((r,i)=>`<div class="lb-row ${r.name===state.player.name?'me':''}"><span>${i+1}. ${r.name}</span><span><b>${r.wordsLearned}</b> palavras · ${r.bestPhase}/6 fases</span></div>`).join('') : '<div class="lb-empty">Ainda ninguém no ranking. Seja o primeiro!</div>'}
+    </div>
+  `;
+}
+
+async function registerPlayer(){
+  const val = document.getElementById('nameInput').value.trim();
+  if(!val){ document.getElementById('nameInput').focus(); return; }
+  state.player = {name: val};
+  await setPersonal('profile', state.player);
+  await setPersonal('stats', {attempts:0,completions:0,bestPhase:0,bestStage:0});
+  renderStart();
+}
+async function switchPlayer(){
+  state.player = null;
+  await setPersonal('profile', null);
+  renderStart();
+}
+
+function phaseOf(idx){ return phaseBounds.find(b=> idx>=b.start && idx<=b.end); }
+
+function renderHUD(){
+  const pb = phaseOf(state.idx);
+  const pct = Math.round((state.idx/TOTAL)*100);
+  const dots = PHASES.map((p,i)=>{
+    let fillPct = 0;
+    if(i < pb.phaseIndex) fillPct = 100;
+    else if(i === pb.phaseIndex){
+      const b = phaseBounds[i];
+      fillPct = Math.round(((state.idx-b.start)/(b.end-b.start+1))*100);
+    }
+    return `<div class="phase-dot ${i===pb.phaseIndex?'current':''}" title="${p.icon} ${p.name}"><div class="fill" style="width:${fillPct}%"></div></div>`;
+  }).join('');
+  return `
+    <div class="hud">
+      <div class="stat">Fase ${pb.phaseIndex+1}/6<span>${PHASES[pb.phaseIndex].icon} ${PHASES[pb.phaseIndex].name}</span></div>
+      <div class="stat">Pontos<span>${state.score}</span></div>
+    </div>
+    <div class="phase-track">${dots}</div>
+    <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+  `;
+}
+
+async function startGame(){
+  state = {idx:0,score:0,answered:false,player:state.player};
+  const stats = (await getPersonal('stats')) || {attempts:0,completions:0,bestPhase:0,bestStage:0};
+  stats.attempts++; await setPersonal('stats',stats);
+  renderStage();
+}
+
+async function updateBest(){
+  const stats = (await getPersonal('stats')) || {attempts:0,completions:0,bestPhase:0,bestStage:0};
+  const pb = phaseOf(Math.min(state.idx, TOTAL-1));
+  if(pb.phaseIndex > stats.bestPhase) stats.bestPhase = pb.phaseIndex;
+  if(state.idx > stats.bestStage) stats.bestStage = state.idx;
+  await setPersonal('stats', stats);
+  const wordsLearned = Math.min(state.idx, TOTAL_WORDS);
+  await setShared('ranking:'+slug(state.player.name), {
+    name: state.player.name, wordsLearned, bestPhase: stats.bestPhase+1, completions: stats.completions, date: new Date().toISOString()
+  });
+}
+
+function renderStage(){
+  const s = stages[state.idx];
+  state.answered = false;
+  if(s.kind==='read'){ renderReadStage(s); } else { renderQuestionStage(s); }
+}
+
+function renderQuestionStage(s){
+  panel.innerHTML = `
+    ${renderHUD()}
+    <div class="tag ${s.kind}">${s.tag}</div>
+    <p class="question">${s.question}</p>
+    <div class="options" id="opts">
+      ${s.options.map(o=>`<button class="opt" onclick="answer(this,'${encodeURIComponent(o)}','${encodeURIComponent(s.correct)}')">${o}</button>`).join('')}
+    </div>
+    <div id="feedbackArea"></div>
+  `;
+}
+
+function answer(btn, chosenEnc, correctEnc){
+  if(state.answered) return;
+  state.answered = true;
+  const chosen = decodeURIComponent(chosenEnc);
+  const correct = decodeURIComponent(correctEnc);
+  document.querySelectorAll('#opts .opt').forEach(o=>{
+    o.setAttribute('disabled','true');
+    if(o.textContent===correct) o.classList.add('correct');
+  });
+  const fb = document.getElementById('feedbackArea');
+  if(chosen===correct){
+    btn.classList.add('correct');
+    state.score += 10;
+    fb.innerHTML = `<div class="feedback ok">✅ Certo! "<b>${correct}</b>" está correto.</div>
+      <div class="actions"><button class="btn btn-primary" onclick="advance()">Continuar →</button></div>`;
+  } else {
+    btn.classList.add('wrong');
+    fb.innerHTML = `<div class="feedback bad">❌ Errado! A resposta certa era "<b>${correct}</b>".</div>
+      <div class="actions"><button class="btn btn-primary" onclick="gameOver()">Ver resultado</button></div>`;
+  }
+}
+
+async function advance(){
+  await updateBest();
+  state.idx++;
+  if(state.idx >= TOTAL){ victory(); } else { renderStage(); }
+}
+
+function renderReadStage(s){
+  panel.innerHTML = `
+    ${renderHUD()}
+    <div class="tag read">${s.tag}</div>
+    <p class="text-title">${s.title}</p>
+    <p class="hint">Toque nas palavras que você já conhece para circulá-las. Depois, escreva em português o que você entendeu do texto.</p>
+    <div class="paragraph" id="paragraphBox"></div>
+    <textarea id="commentBox" placeholder="O que você entendeu deste texto? Escreva um resumo em português..."></textarea>
+    <div id="summaryArea" class="summary-box"></div>
+    <div class="actions">
+      <button class="btn btn-ghost" onclick="revealSummary('${btoa(unescape(encodeURIComponent(s.sum)))}')">Ver resumo e comparar</button>
+      <button class="btn btn-primary" onclick="advance()">Continuar →</button>
+    </div>
+  `;
+  document.getElementById('paragraphBox').innerHTML = s.p.split(' ').map(w=>`<span class="word" onclick="this.classList.toggle('circled')">${w}</span>`).join(' ');
+}
+
+function revealSummary(b64){
+  const sum = decodeURIComponent(escape(atob(b64)));
+  const area = document.getElementById('summaryArea');
+  area.innerHTML = `<b>📌 Resumo do texto (para comparar com o seu):</b><br>${sum}`;
+  area.classList.add('show');
+}
+
+async function gameOver(){
+  await updateBest();
+  const stats = (await getPersonal('stats')) || {attempts:0,completions:0,bestPhase:0,bestStage:0};
+  const pb = phaseOf(state.idx);
+  panel.innerHTML = `
+    <div class="big-icon">💥</div>
+    <p class="result-title">Ops! Você errou.</p>
+    <p class="result-sub">Você chegou até a fase ${pb.phaseIndex+1}/6 (${PHASES[pb.phaseIndex].name}), com ${state.score} pontos.<br>No modo clássico, um erro reinicia a trilha do início — bora tentar de novo?</p>
+    <div class="stats-row">
+      <div class="stat-card"><b>${stats.bestPhase+1}/6</b><span>Seu recorde</span></div>
+      <div class="stat-card"><b>${stats.attempts}</b><span>Tentativas</span></div>
+    </div>
+    <button class="btn btn-primary btn-block" onclick="startGame()">🔄 Reiniciar do início</button>
+    <button class="btn btn-ghost btn-block" style="margin-top:10px;" onclick="renderStart()">Ver ranking</button>
+  `;
+}
+
+async function victory(){
+  const stats = (await getPersonal('stats')) || {attempts:0,completions:0,bestPhase:0,bestStage:0};
+  stats.completions++; stats.bestPhase = 5; stats.bestStage = TOTAL;
+  await setPersonal('stats', stats);
+  await setShared('ranking:'+slug(state.player.name), {
+    name: state.player.name, wordsLearned: TOTAL_WORDS, bestPhase: 6, completions: stats.completions, date: new Date().toISOString()
+  });
+  panel.innerHTML = `
+    <div class="big-icon">🏆</div>
+    <p class="result-title">Você zerou a Trilha da Fluência!</p>
+    <p class="result-sub">${TOTAL_WORDS} palavras e 10 expressões, do início ao fim, sem errar uma questão. ${state.score} pontos. Fluência é treino diário — bora manter a sequência!</p>
+    <div class="stats-row">
+      <div class="stat-card"><b>${stats.completions}</b><span>Trilhas zeradas</span></div>
+      <div class="stat-card"><b>${stats.attempts}</b><span>Tentativas totais</span></div>
+    </div>
+    <button class="btn btn-primary btn-block" onclick="startGame()">🔁 Jogar de novo</button>
+    <button class="btn btn-ghost btn-block" style="margin-top:10px;" onclick="renderStart()">Ver ranking</button>
+  `;
+}
+
+boot();
+</script>
+</body>
+</html>
