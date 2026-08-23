@@ -721,11 +721,11 @@ const TOTAL = stages.length;
 const TOTAL_WORDS = PHASES.reduce((a,p)=>a+p.words.length,0);
 
 /* ================= STORAGE ================= */
-/* Dados pessoais (perfil/estatísticas do jogador): ficam no navegador dele (localStorage) */
+/* Cache local (mais rápido) — a fonte real de verdade do perfil é o Firestore */
 async function getPersonal(key){ try{ const v = localStorage.getItem('trilha:'+key); return v?JSON.parse(v):null; }catch(e){ return null; } }
 async function setPersonal(key,val){ try{ localStorage.setItem('trilha:'+key, JSON.stringify(val)); }catch(e){} }
 
-/* Ranking compartilhado: fica no Firestore, visível para todos os jogadores */
+/* Firestore: ranking compartilhado + perfil do jogador (permite continuar em qualquer dispositivo) */
 const firebaseConfig = {
   apiKey: "AIzaSyCZLMj7cWoLCIztIzVUe6RjLWLe-4mznzU",
   authDomain: "trilha-da-fluencia-ea6b4.firebaseapp.com",
@@ -753,6 +753,23 @@ async function loadLeaderboard(){
     console.error('Erro ao carregar ranking:', e);
     return [];
   }
+}
+
+/* Perfil do jogador na nuvem — permite entrar com o mesmo nome em outro dispositivo e continuar */
+async function loadPlayerFromCloud(name){
+  try{
+    const doc = await db.collection('players').doc(slug(name)).get();
+    return doc.exists ? doc.data() : null;
+  }catch(e){ console.error('Erro ao carregar perfil:', e); return null; }
+}
+async function saveStats(stats){
+  await setPersonal('stats', stats);
+  if(!state.player) return;
+  try{
+    await db.collection('players').doc(slug(state.player.name)).set({
+      name: state.player.name, ...stats
+    });
+  }catch(e){ console.error('Erro ao sincronizar perfil:', e); }
 }
 
 /* ================= STATE ================= */
@@ -807,7 +824,11 @@ async function registerPlayer(){
   if(!val){ document.getElementById('nameInput').focus(); return; }
   state.player = {name: val};
   await setPersonal('profile', state.player);
-  await setPersonal('stats', {attempts:0,completions:0,bestPhase:0,bestStage:0});
+  const cloud = await loadPlayerFromCloud(val);
+  const stats = cloud
+    ? {attempts:cloud.attempts||0, completions:cloud.completions||0, bestPhase:cloud.bestPhase||0, bestStage:cloud.bestStage||0}
+    : {attempts:0,completions:0,bestPhase:0,bestStage:0};
+  await setPersonal('stats', stats);
   renderStart();
 }
 async function switchPlayer(){
@@ -843,7 +864,7 @@ function renderHUD(){
 async function startGame(){
   state = {idx:0,score:0,answered:false,player:state.player};
   const stats = (await getPersonal('stats')) || {attempts:0,completions:0,bestPhase:0,bestStage:0};
-  stats.attempts++; await setPersonal('stats',stats);
+  stats.attempts++; await saveStats(stats);
   renderStage();
 }
 
@@ -852,7 +873,7 @@ async function updateBest(){
   const pb = phaseOf(Math.min(state.idx, TOTAL-1));
   if(pb.phaseIndex > stats.bestPhase) stats.bestPhase = pb.phaseIndex;
   if(state.idx > stats.bestStage) stats.bestStage = state.idx;
-  await setPersonal('stats', stats);
+  await saveStats(stats);
   const wordsLearned = Math.min(state.idx, TOTAL_WORDS);
   await setShared(state.player.name, {
     name: state.player.name, wordsLearned, bestPhase: stats.bestPhase+1, completions: stats.completions, date: new Date().toISOString()
@@ -949,7 +970,7 @@ async function gameOver(){
 async function victory(){
   const stats = (await getPersonal('stats')) || {attempts:0,completions:0,bestPhase:0,bestStage:0};
   stats.completions++; stats.bestPhase = 5; stats.bestStage = TOTAL;
-  await setPersonal('stats', stats);
+  await saveStats(stats);
   await setShared(state.player.name, {
     name: state.player.name, wordsLearned: TOTAL_WORDS, bestPhase: 6, completions: stats.completions, date: new Date().toISOString()
   });
