@@ -100,6 +100,56 @@ textarea{width:100%;min-height:80px;margin-top:16px;padding:12px;border-radius:1
 footer{text-align:center;color:#8f8874;font-size:12px;margin-top:20px;}
 .spin{opacity:.6;text-align:center;padding:20px;font-size:14px;}
 @media(max-width:480px){.panel{padding:20px 16px;} .question{font-size:17px;}}
+
+/* ===== Modos animados de pergunta ===== */
+.arcade-wrap{position:relative;}
+.arcade-timer{height:8px;border-radius:99px;background:#e5dcc0;overflow:hidden;margin-bottom:14px;}
+.arcade-timer-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--gold),var(--coral));width:100%;transform-origin:left;}
+.arcade-timer-fill.running{animation:arcadeCountdown linear forwards;}
+@keyframes arcadeCountdown{ from{width:100%;} to{width:0%;} }
+
+.arcade-area{position:relative;min-height:320px;border-radius:14px;overflow:hidden;margin-bottom:6px;}
+.arcade-mode-balloon .arcade-area,.arcade-mode-orbit .arcade-area,.arcade-mode-zigzag .arcade-area,.arcade-mode-target .arcade-area{background:linear-gradient(180deg,#dcecff,#eef6ff);}
+.arcade-mode-fall .arcade-area{background:linear-gradient(180deg,#1c2340,#101a2e);}
+.arcade-mode-rock .arcade-area{background:linear-gradient(180deg,#e7ddc4,#d8c9a3);}
+
+.chip{position:absolute;padding:11px 18px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;border:2px solid var(--card-line);background:#fffdf5;color:var(--ink);box-shadow:var(--shadow);user-select:none;transition:transform .15s;white-space:nowrap;}
+.chip:active{transform:scale(.94);}
+.chip.correct{background:#dcf3e7;border-color:var(--green);}
+.chip.wrong{background:#fbdbd4;border-color:var(--coral);opacity:.6;}
+.chip.disabled{pointer-events:none;animation-play-state:paused!important;}
+
+/* Balões flutuando */
+.chip-balloon{border-radius:999px 999px 999px 0/999px 999px 60% 0;padding:14px 18px;animation:balloonFloat 3.4s ease-in-out infinite;}
+.chip-balloon::after{content:'';position:absolute;left:50%;bottom:-10px;width:2px;height:10px;background:var(--card-line);}
+@keyframes balloonFloat{ 0%,100%{transform:translateY(0) rotate(-3deg);} 50%{transform:translateY(-16px) rotate(3deg);} }
+
+/* Palavras caindo (estilo Tetris) — mais lento, uma pista por palavra, sem sobrepor */
+.chip-fall{background:#fffdf5;animation:chipFall linear forwards;}
+@keyframes chipFall{ from{transform:translateY(-60px);} to{transform:translateY(300px);} }
+
+/* Balões orbitando */
+.chip-orbit{transition:none;}
+
+/* Zigue-zague */
+.chip-zigzag{background:#fffdf5;}
+
+/* Tiro ao alvo */
+.chip-target{border-radius:50%;width:88px;height:88px;padding:0;display:flex;align-items:center;justify-content:center;text-align:center;font-size:12px;line-height:1.15;background:
+    radial-gradient(circle at center, #fffdf5 0 18%, var(--coral) 18% 32%, #fffdf5 32% 46%, var(--blue) 46% 60%, #fffdf5 60% 100%);
+  border:2px solid var(--card-line);}
+.chip-target.hit{animation:targetHit .3s ease forwards;}
+@keyframes targetHit{ 0%{transform:scale(1);} 50%{transform:scale(1.25);} 100%{transform:scale(.85);} }
+
+/* Pedras para quebrar */
+.chip-rock{position:static;display:inline-flex;align-items:center;justify-content:center;min-width:110px;min-height:64px;margin:10px 14px;border-radius:38% 62% 55% 45%/52% 42% 58% 48%;background:linear-gradient(155deg,#9c9284,#6b6552);color:#fff5df;border:none;box-shadow:inset 0 -6px 10px rgba(0,0,0,.25), 0 6px 10px rgba(0,0,0,.25);}
+.chip-rock::before{content:'🔨';position:absolute;top:-14px;right:-6px;font-size:18px;opacity:0;transition:opacity .1s;}
+.chip-rock.smash{animation:rockSmash .35s ease forwards;}
+.chip-rock.smash::before{opacity:1;}
+@keyframes rockSmash{ 0%{transform:scale(1);} 40%{transform:scale(1.15) rotate(-4deg);} 100%{transform:scale(0);opacity:0;} }
+.rock-grid{display:flex;flex-wrap:wrap;justify-content:center;align-content:center;padding:24px;min-height:320px;}
+
+.arcade-hint{text-align:center;font-size:12px;color:var(--muted);margin:6px 0 14px;}
 </style>
 </head>
 <body>
@@ -115,92 +165,92 @@ footer{text-align:center;color:#8f8874;font-size:12px;margin-top:20px;}
 
 <script>
 /* ================= WORD BANKS (en|pt) ================= */
-const P1 = `house|casa
-home|lar
-room|cômodo, quarto
-kitchen|cozinha
-bathroom|banheiro
-bedroom|quarto de dormir
-living room|sala de estar
-door|porta
-window|janela
-floor|chão, andar
-wall|parede
-roof|telhado
-key|chave
-table|mesa
-chair|cadeira
-bed|cama
-sofa|sofá
-lamp|luminária
-mirror|espelho
-closet|armário
-shelf|prateleira
-towel|toalha
-soap|sabonete
-toothbrush|escova de dente
-shower|chuveiro
-sink|pia
-fridge|geladeira
-stove|fogão
-oven|forno
-microwave|micro-ondas
-plate|prato
-cup|xícara
-glass|copo
-fork|garfo
-knife|faca
-spoon|colher
-trash|lixo
-clean|limpar
-wash|lavar
-cook|cozinhar
-sleep|dormir
-wake up|acordar
-get up|levantar-se
-brush|escovar
-dress|vestir-se
-take a shower|tomar banho
-rest|descansar
-relax|relaxar
-routine|rotina
-schedule|agenda, horário
-alarm|despertador
-morning|manhã
-afternoon|tarde
-evening|entardecer, noite
-night|noite
-today|hoje
-tomorrow|amanhã
-yesterday|ontem
-week|semana
-month|mês
-year|ano
-hour|hora
-minute|minuto
-always|sempre
-never|nunca
-sometimes|às vezes
-usually|geralmente
-often|frequentemente
-open|abrir
-close|fechar
-turn on|ligar
-turn off|desligar
-light|luz
-dark|escuro
-quiet|silencioso
-noisy|barulhento
-comfortable|confortável
-messy|bagunçado
-tidy|arrumado
-neighbor|vizinho
-apartment|apartamento
-address|endereço
-rent|aluguel
-furniture|móveis
-blanket|cobertor
-pillow|travesseiro`;
+const P1 = `house|casa|We bought a small house near the park.
+home|lar|There is no place like home.
+room|cômodo, quarto|This room is bigger than my old one.
+kitchen|cozinha|My mother is cooking in the kitchen.
+bathroom|banheiro|The bathroom is at the end of the hall.
+bedroom|quarto de dormir|I painted my bedroom blue last year.
+living room|sala de estar|We watch TV together in the living room.
+door|porta|Please close the door when you leave.
+window|janela|She opened the window to let in fresh air.
+floor|chão, andar|The cat is sleeping on the floor.
+wall|parede|We hung a painting on the wall.
+roof|telhado|The roof leaks a little when it rains.
+key|chave|I forgot my key inside the house.
+table|mesa|Dinner is ready on the table.
+chair|cadeira|He pulled a chair closer to the desk.
+bed|cama|I make my bed every morning.
+sofa|sofá|We relaxed on the sofa after work.
+lamp|luminária|Turn on the lamp, it's getting dark.
+mirror|espelho|She looked at herself in the mirror.
+closet|armário|My clothes are hanging in the closet.
+shelf|prateleira|Put the books back on the shelf.
+towel|toalha|Grab a towel after your shower.
+soap|sabonete|Wash your hands with soap and water.
+toothbrush|escova de dente|I keep my toothbrush next to the sink.
+shower|chuveiro|The shower was too cold this morning.
+sink|pia|He left the dishes in the sink.
+fridge|geladeira|There is some milk in the fridge.
+stove|fogão|Don't leave the stove on when you go out.
+oven|forno|The bread is baking in the oven.
+microwave|micro-ondas|I heated my lunch in the microwave.
+plate|prato|She placed a clean plate on the table.
+cup|xícara|Would you like a cup of coffee?
+glass|copo|He filled the glass with cold water.
+fork|garfo|Use a fork to eat your salad.
+knife|faca|Be careful with that sharp knife.
+spoon|colher|I need a spoon for my soup.
+trash|lixo|Can you take out the trash tonight?
+clean|limpar|I always clean my room on Sundays.
+wash|lavar|Please wash the dishes after dinner.
+cook|cozinhar|My father loves to cook on weekends.
+sleep|dormir|I need to sleep at least eight hours.
+wake up|acordar|I usually wake up before sunrise.
+get up|levantar-se|It's hard to get up on cold mornings.
+brush|escovar|Remember to brush your teeth twice a day.
+dress|vestir-se|She likes to dress in bright colors.
+take a shower|tomar banho|I take a shower every morning before work.
+rest|descansar|You should rest after a long day.
+relax|relaxar|We like to relax by the fireplace.
+routine|rotina|My daily routine keeps me organized.
+schedule|agenda, horário|Check the schedule before you plan a trip.
+alarm|despertador|My alarm rings at six every morning.
+morning|manhã|I drink coffee every morning.
+afternoon|tarde|We usually go for a walk in the afternoon.
+evening|entardecer, noite|The sunset is beautiful in the evening.
+night|noite|The city looks different at night.
+today|hoje|I have a lot of work to do today.
+tomorrow|amanhã|We will visit my grandmother tomorrow.
+yesterday|ontem|It rained a lot yesterday.
+week|semana|I go to the gym three times a week.
+month|mês|Rent is due at the start of the month.
+year|ano|We are planning a trip next year.
+hour|hora|The meeting lasted about one hour.
+minute|minuto|Wait a minute, I'm almost ready.
+always|sempre|She always locks the door at night.
+never|nunca|I never leave the house without my keys.
+sometimes|às vezes|Sometimes I cook dinner for the whole family.
+usually|geralmente|I usually wake up at seven o'clock.
+often|frequentemente|We often clean the house on Saturdays.
+open|abrir|Could you open the window, please?
+close|fechar|Please close the door quietly.
+turn on|ligar|Turn on the light, it's too dark here.
+turn off|desligar|Don't forget to turn off the stove.
+light|luz|The light in the kitchen is very bright.
+dark|escuro|It gets dark early in the winter.
+quiet|silencioso|The house was quiet after everyone left.
+noisy|barulhento|The street outside is very noisy at night.
+comfortable|confortável|This sofa is really comfortable.
+messy|bagunçado|My room is a bit messy today.
+tidy|arrumado|She keeps her desk very tidy.
+neighbor|vizinho|Our neighbor waters our plants when we travel.
+apartment|apartamento|They just moved into a new apartment.
+address|endereço|Can you send me your home address?
+rent|aluguel|We pay the rent on the first of the month.
+furniture|móveis|We bought new furniture for the living room.
+blanket|cobertor|I wrapped myself in a warm blanket.
+pillow|travesseiro|This pillow is too soft for me.`;
 
 const P2 = `family|família
 mother|mãe
@@ -634,7 +684,7 @@ carry|carregar
 hold|segurar`;
 
 function parseBank(str){
-  return str.trim().split("\n").map(l=>{const [en,pt]=l.split("|");return{en:en.trim(),pt:pt.trim()};});
+  return str.trim().split("\n").map(l=>{const [en,pt,ex]=l.split("|");return{en:en.trim(),pt:pt.trim(),ex:ex?ex.trim():null};});
 }
 
 const exprData = [
@@ -695,7 +745,25 @@ function buildVocabStage(item,pool,idx){
     correct = item.en;
     options = shuffle([correct,...pickDistractors(pool,correct,'en',3)]);
   }
-  return {kind:'vocab',tag:'Vocabulário',question,correct,options};
+  return {kind:'vocab',tag:'Vocabulário · Nível 1',question,correct,options};
+}
+/* Nível 2: a palavra aparece dentro de uma frase, com uma lacuna — escolha a palavra certa */
+function buildLevel2Stage(item,pool){
+  const re = new RegExp(item.en.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'i');
+  const blanked = item.ex.replace(re, '_____');
+  const question = `Complete a frase com a palavra certa:<br><span class="sub" style="display:block;margin-top:6px;"><i>"${blanked}"</i></span>`;
+  const correct = item.en;
+  const options = shuffle([correct,...pickDistractors(pool.filter(w=>w.ex),correct,'en',3)]);
+  return {kind:'vocab',tag:'Vocabulário · Nível 2 (em frase)',question,correct,options};
+}
+/* Nível 3: a frase completa aparece com a palavra destacada — escolha o significado no contexto */
+function buildLevel3Stage(item,pool){
+  const re = new RegExp('('+item.en.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')', 'i');
+  const highlighted = item.ex.replace(re, '<b>$1</b>');
+  const question = `Nesta frase, o que significa a palavra destacada?<br><span class="sub" style="display:block;margin-top:6px;"><i>"${highlighted}"</i></span>`;
+  const correct = item.pt;
+  const options = shuffle([correct,...pickDistractors(pool.filter(w=>w.ex),correct,'pt',3)]);
+  return {kind:'expr',tag:'Vocabulário · Nível 3 (uso em contexto)',question,correct,options};
 }
 function buildExprStage(item,pool){
   const question = `O que significa a expressão <b>"${item.en}"</b>?<br><span class="sub" style="display:block;margin-top:6px;">Exemplo: <i>"${item.s}"</i></span>`;
@@ -712,7 +780,13 @@ let stages = [];
 let phaseBounds = []; // {startIdx, endIdx, phaseIndex}
 PHASES.forEach((ph,pi)=>{
   const start = stages.length;
+  const withEx = ph.words.filter(w=>w.ex); // palavras que já têm frase de exemplo (níveis 2 e 3)
+  // Nível 1 — todas as palavras da fase
   ph.words.forEach((w,i)=> stages.push({...buildVocabStage(w,ph.words,i), phaseIndex:pi}));
+  // Nível 2 — só libera depois de concluir o nível 1 inteiro (ordem sequencial + erro reinicia a fase)
+  if(withEx.length){ withEx.forEach(w=> stages.push({...buildLevel2Stage(w,withEx), phaseIndex:pi})); }
+  // Nível 3 — só libera depois de concluir o nível 2 inteiro
+  if(withEx.length){ withEx.forEach(w=> stages.push({...buildLevel3Stage(w,withEx), phaseIndex:pi})); }
   stages.push({...buildReadStage(ph.text,ph.name), phaseIndex:pi});
   if(ph.extra){ ph.extra.forEach(e=> stages.push({...buildExprStage(e,ph.extra), phaseIndex:pi})); }
   phaseBounds.push({start, end:stages.length-1, phaseIndex:pi});
@@ -794,6 +868,7 @@ async function boot(){
 }
 
 async function renderStart(){
+  stopArcadeTimers();
   if(!state.player){
     panel.innerHTML = `
       <div class="center">
@@ -906,43 +981,175 @@ async function updateBest(){
 }
 
 function renderStage(){
+  stopArcadeTimers();
   const s = stages[state.idx];
   state.answered = false;
   if(s.kind==='read'){ renderReadStage(s); } else { renderQuestionStage(s); }
 }
 
+const ARCADE_MODES = ['balloon','fall','orbit','rock','zigzag','target'];
+let arcadeTimerId = null;
+let arcadeAnimFrame = null;
+
 function renderQuestionStage(s){
+  const mode = ARCADE_MODES[Math.floor(Math.random()*ARCADE_MODES.length)];
+  const hints = {
+    balloon:'🎈 Estoure o balão com a resposta certa antes que o tempo acabe!',
+    fall:'⬇️ Toque na palavra certa antes que ela caia até o fim!',
+    orbit:'🌀 As opções giram ao redor — clique na resposta certa a tempo!',
+    rock:'🔨 Quebre a pedra com a resposta certa antes que o tempo acabe!',
+    zigzag:'↯ As palavras se movem em zigue-zague — clique na certa a tempo!',
+    target:'🎯 Mire e atire no alvo com a resposta certa!'
+  };
+  const chipsHtml = s.options.map((o,i)=>`<div class="chip chip-${mode}" data-i="${i}" data-val="${encodeURIComponent(o)}">${o}</div>`).join('');
   panel.innerHTML = `
     ${renderHUD()}
     <div class="tag ${s.kind}">${s.tag}</div>
     <p class="question">${s.question}</p>
-    <div class="options" id="opts">
-      ${s.options.map(o=>`<button class="opt" onclick="answer(this,'${encodeURIComponent(o)}','${encodeURIComponent(s.correct)}')">${o}</button>`).join('')}
+    <div class="arcade-timer"><div class="arcade-timer-fill running" id="timerFill" style="animation-duration:5s;"></div></div>
+    <div class="arcade-wrap arcade-mode-${mode}">
+      <div class="${mode==='rock'?'arcade-area rock-grid':'arcade-area'}" id="arcadeArea">
+        ${chipsHtml}
+      </div>
     </div>
+    <p class="arcade-hint">${hints[mode]}</p>
     <div id="feedbackArea"></div>
   `;
+  initArcadeMode(mode, s);
 }
 
-function answer(btn, chosenEnc, correctEnc){
+/* Divide a área em faixas (colunas/linhas) para distribuir as opções sem sobrepor,
+   com um pequeno espaço de respiro (gutter) entre elas. */
+function slotLayout(n, areaW, areaH, chipW, chipH, gutter){
+  const cols = n<=2 ? n : (n===3?3:2);
+  const rows = Math.ceil(n/cols);
+  const cellW = areaW/cols, cellH = areaH/rows;
+  const slots = [];
+  for(let i=0;i<n;i++){
+    const col = i % cols, row = Math.floor(i/cols);
+    const jitterX = (cellW - chipW - gutter*2) > 0 ? (Math.random()-0.5)*(cellW-chipW-gutter*2) : 0;
+    const jitterY = (cellH - chipH - gutter*2) > 0 ? (Math.random()-0.5)*(cellH-chipH-gutter*2) : 0;
+    slots.push({
+      x: col*cellW + cellW/2 - chipW/2 + jitterX,
+      y: row*cellH + cellH/2 - chipH/2 + jitterY
+    });
+  }
+  // embaralha para não repetir sempre a mesma ordem visual
+  for(let i=slots.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [slots[i],slots[j]]=[slots[j],slots[i]]; }
+  return slots;
+}
+
+function initArcadeMode(mode, s){
+  const area = document.getElementById('arcadeArea');
+  const chips = Array.from(area.querySelectorAll('.chip'));
+  const rect = area.getBoundingClientRect();
+  const chipW = 120, chipH = 46, gutter = 10;
+
+  if(mode==='balloon'){
+    const slots = slotLayout(chips.length, rect.width, rect.height, chipW, chipH, gutter);
+    chips.forEach((c,i)=>{
+      c.style.left = slots[i].x+'px'; c.style.top = slots[i].y+'px';
+      c.style.animationDelay = (Math.random()*1.5) + 's';
+      c.style.animationDuration = (3.0 + Math.random()*1.2) + 's';
+    });
+  } else if(mode==='fall'){
+    // uma pista (coluna) por palavra, para nunca sobrepor
+    const lanes = chips.length;
+    const laneW = rect.width/lanes;
+    chips.forEach((c,i)=>{
+      c.style.left = (i*laneW + laneW/2 - chipW/2) + 'px';
+      c.style.animationDelay = (Math.random()*0.6) + 's';
+      c.style.animationDuration = (6.5 + Math.random()*1.5) + 's'; // bem mais lento que antes
+    });
+  } else if(mode==='orbit'){
+    const cx = rect.width/2, cy = rect.height/2;
+    const radius = Math.min(cx,cy) - 55;
+    const baseAngles = chips.map((_,i)=> (2*Math.PI/chips.length)*i);
+    const start = performance.now();
+    function frame(now){
+      const t = (now-start)/1000;
+      chips.forEach((c,i)=>{
+        const angle = baseAngles[i] + t*0.45; // metade da velocidade anterior
+        const x = cx + radius*Math.cos(angle) - c.offsetWidth/2;
+        const y = cy + radius*Math.sin(angle) - c.offsetHeight/2;
+        c.style.left = x+'px'; c.style.top = y+'px';
+      });
+      arcadeAnimFrame = requestAnimationFrame(frame);
+    }
+    arcadeAnimFrame = requestAnimationFrame(frame);
+  } else if(mode==='zigzag'){
+    const lanes = chips.length;
+    const laneW = rect.width/lanes;
+    const baseX = chips.map((_,i)=> i*laneW + laneW/2 - chipW/2);
+    const amp = Math.max(18, laneW/2 - chipW/2 - 6);
+    const freq = chips.map(()=> 0.6 + Math.random()*0.3);
+    const phase = chips.map(()=> Math.random()*Math.PI*2);
+    const speedY = 26; // px/s descendo
+    const start = performance.now();
+    function frame(now){
+      const t = (now-start)/1000;
+      chips.forEach((c,i)=>{
+        const x = baseX[i] + amp*Math.sin(t*freq[i]*Math.PI + phase[i]);
+        const y = -50 + Math.min(t*speedY, rect.height-40);
+        c.style.left = x+'px'; c.style.top = y+'px';
+      });
+      arcadeAnimFrame = requestAnimationFrame(frame);
+    }
+    arcadeAnimFrame = requestAnimationFrame(frame);
+  } else if(mode==='target'){
+    const slots = slotLayout(chips.length, rect.width, rect.height, 88, 88, 14);
+    chips.forEach((c,i)=>{ c.style.left = slots[i].x+'px'; c.style.top = slots[i].y+'px'; });
+  }
+  // rock: posições já vêm do layout em grade (rock-grid), sem posicionamento absoluto
+
+  chips.forEach(c=>{
+    c.addEventListener('click', ()=> chooseArcade(c, decodeURIComponent(c.dataset.val), s.correct, mode));
+  });
+
+  arcadeTimerId = setTimeout(()=> arcadeTimeout(s), 5000);
+}
+
+function stopArcadeTimers(){
+  if(arcadeTimerId){ clearTimeout(arcadeTimerId); arcadeTimerId = null; }
+  if(arcadeAnimFrame){ cancelAnimationFrame(arcadeAnimFrame); arcadeAnimFrame = null; }
+}
+
+function chooseArcade(el, chosen, correct, mode){
   if(state.answered) return;
   state.answered = true;
-  const chosen = decodeURIComponent(chosenEnc);
-  const correct = decodeURIComponent(correctEnc);
-  document.querySelectorAll('#opts .opt').forEach(o=>{
-    o.setAttribute('disabled','true');
-    if(o.textContent===correct) o.classList.add('correct');
+  stopArcadeTimers();
+  const chips = document.querySelectorAll('#arcadeArea .chip');
+  chips.forEach(c=>{
+    c.classList.add('disabled');
+    if(decodeURIComponent(c.dataset.val)===correct) c.classList.add('correct');
+    if(mode==='rock') c.classList.add('smash');
+    if(mode==='target') c.classList.add('hit');
   });
   const fb = document.getElementById('feedbackArea');
   if(chosen===correct){
-    btn.classList.add('correct');
+    el.classList.add('correct');
     state.score += 10;
     fb.innerHTML = `<div class="feedback ok">✅ Certo! "<b>${correct}</b>" está correto.</div>
       <div class="actions"><button class="btn btn-primary" onclick="advance()">Continuar →</button></div>`;
   } else {
-    btn.classList.add('wrong');
+    el.classList.add('wrong');
     fb.innerHTML = `<div class="feedback bad">❌ Errado! A resposta certa era "<b>${correct}</b>".</div>
       <div class="actions"><button class="btn btn-primary" onclick="gameOver()">Ver resultado</button></div>`;
   }
+}
+
+function arcadeTimeout(s){
+  if(state.answered) return;
+  state.answered = true;
+  stopArcadeTimers();
+  const chips = document.querySelectorAll('#arcadeArea .chip');
+  chips.forEach(c=>{
+    c.classList.add('disabled');
+    if(decodeURIComponent(c.dataset.val)===s.correct) c.classList.add('correct');
+  });
+  const fb = document.getElementById('feedbackArea');
+  fb.innerHTML = `<div class="feedback bad">⏱️ Tempo esgotado! A resposta certa era "<b>${s.correct}</b>".</div>
+    <div class="actions"><button class="btn btn-primary" onclick="gameOver()">Ver resultado</button></div>`;
 }
 
 async function advance(){
@@ -976,6 +1183,7 @@ function revealSummary(b64){
 }
 
 async function gameOver(){
+  stopArcadeTimers();
   await updateBest();
   const stats = (await getPersonal('stats')) || {attempts:0,completions:0,bestPhase:0,bestStage:0};
   const pb = phaseOf(state.idx);
@@ -992,6 +1200,7 @@ async function gameOver(){
 }
 
 async function victory(){
+  stopArcadeTimers();
   const stats = (await getPersonal('stats')) || {attempts:0,completions:0,bestPhase:0,bestStage:0};
   stats.completions++; stats.bestPhase = 5; stats.bestStage = TOTAL;
   await saveStats(stats);
