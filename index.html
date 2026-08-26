@@ -182,21 +182,21 @@ footer{text-align:center;color:#8f8874;font-size:12px;margin-top:20px;}
 .game-scene-label{position:absolute;bottom:4px;left:8px;font-size:10px;font-weight:700;color:#fff;
   text-shadow:0 1px 2px rgba(0,0,0,.4);background:rgba(0,0,0,.18);padding:2px 6px;border-radius:99px;}
 
-/* ===== Modo Caminhos: pergunta em cima, 4 trilhas à direita, personagem escolhe correndo/pulando ===== */
+/* ===== Modo Caminhos: corredor em tempo real, personagem corre sozinho e você troca de pista ===== */
 .arcade-mode-path .arcade-area{background:linear-gradient(180deg,#dcecff,#eef6ff);}
-.path-lane{position:absolute;left:12%;right:60px;height:3px;background:repeating-linear-gradient(90deg, rgba(120,110,80,.5) 0 8px, transparent 8px 16px);}
-.chip.path-sign{position:absolute;}
-.path-char{position:absolute;font-size:30px;transition:left .65s cubic-bezier(.4,0,.2,1), top .65s cubic-bezier(.4,0,.2,1);
+.path-lane{position:absolute;left:0;right:0;height:2px;background:repeating-linear-gradient(90deg, rgba(120,110,80,.4) 0 8px, transparent 8px 16px);}
+.chip.path-sign{position:absolute;white-space:nowrap;transition:none;}
+.path-char{position:absolute;font-size:30px;transition:top .2s ease;
   filter:drop-shadow(0 3px 3px rgba(0,0,0,.35));z-index:5;}
 .path-char.running{animation:charRun .22s steps(2) infinite;}
-.path-char.jumping{animation:charJump .4s ease;}
-@keyframes charJump{ 0%{transform:translateY(0) rotate(0);} 45%{transform:translateY(-26px) rotate(-10deg);} 100%{transform:translateY(0) rotate(0);} }
+.path-char.hit{animation:charHit .5s ease;}
+@keyframes charHit{ 0%{transform:rotate(0);} 30%{transform:rotate(-20deg) translateX(-6px);} 60%{transform:rotate(15deg) translateX(4px);} 100%{transform:rotate(0);} }
+.path-obstacle{position:absolute;font-size:26px;top:0;z-index:4;filter:drop-shadow(0 3px 3px rgba(0,0,0,.3));}
 
 .path-controls{display:flex;align-items:center;justify-content:center;gap:10px;margin:12px 0 4px;}
 .path-btn{border:2px solid var(--card-line);background:#fffdf5;color:var(--ink);border-radius:12px;padding:10px 16px;
-  font-size:18px;font-weight:800;cursor:pointer;box-shadow:var(--shadow);}
+  font-size:14px;font-weight:800;cursor:pointer;box-shadow:var(--shadow);}
 .path-btn:active{transform:scale(.94);}
-.path-btn-jump{font-size:15px;background:var(--gold);border-color:var(--gold);color:#3a2a08;padding:10px 18px;}
 
 /* ===== Grade de seleção de mundos ===== */
 .world-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;}
@@ -1181,10 +1181,9 @@ function renderStage(){
   if(s.kind==='read'){ renderReadStage(s); } else { renderQuestionStage(s); }
 }
 
-const ARCADE_MODES = ['balloon','fall','orbit','rock','zigzag','target','path'];
+const ARCADE_MODES = ['balloon','fall','orbit','rock','zigzag','target'];
 let arcadeTimerId = null;
 let arcadeAnimFrame = null;
-let pathLocked = false;
 
 function renderQuestionStage(s){
   const mode = ARCADE_MODES[Math.floor(Math.random()*ARCADE_MODES.length)];
@@ -1195,12 +1194,11 @@ function renderQuestionStage(s){
     rock:'🔨 Quebre a pedra com a resposta certa antes que o tempo acabe!',
     zigzag:'↯ As palavras se movem em zigue-zague — clique na certa a tempo!',
     target:'🎯 Mire e atire no alvo com a resposta certa!',
-    path:'🎮 Use ▲ ▼ (ou as setas do teclado) para mudar de trilha e 🦘 Pular (ou Enter) para escolher!'
+    path:'🏃 Corra sem parar! Use ▲ ▼ (ou as setas) pra trocar de pista, desvie das pedras 🪨 e capture a fruta 🍎 com a resposta certa!'
   };
   const chipsHtml = s.options.map((o,i)=>`<div class="chip chip-${mode}" data-i="${i}" data-val="${encodeURIComponent(o)}">${o}</div>`).join('');
   panel.innerHTML = `
     ${renderHUD()}
-    ${renderGameScene()}
     <div class="tag ${s.kind}">${s.tag}</div>
     <p class="question">${s.question}</p>
     <div class="arcade-timer"><div class="arcade-timer-fill running" id="timerFill" style="animation-duration:10s;"></div></div>
@@ -1211,9 +1209,8 @@ function renderQuestionStage(s){
     </div>
     ${mode==='path' ? `
     <div class="path-controls">
-      <button class="path-btn" onclick="movePathLane(-1)">▲</button>
-      <button class="path-btn path-btn-jump" onclick="confirmPathLane()">🦘 Pular</button>
-      <button class="path-btn" onclick="movePathLane(1)">▼</button>
+      <button class="path-btn" onclick="movePathLane(-1)">▲ Pista de cima</button>
+      <button class="path-btn" onclick="movePathLane(1)">▼ Pista de baixo</button>
     </div>` : ''}
     <p class="arcade-hint">${hints[mode]}</p>
     <div id="feedbackArea"></div>
@@ -1305,35 +1302,77 @@ function initArcadeMode(mode, s){
   } else if(mode==='path'){
     const rows = chips.length;
     const rowH = rect.height/rows;
-    chips.forEach((c,i)=>{
-      c.classList.add('path-sign');
-      c.style.right = '4px'; c.style.left = 'auto';
-      c.style.top = (i*rowH + rowH/2 - chipH/2) + 'px';
-      c.style.cursor = 'default';
+    // linhas guia
+    for(let i=0;i<rows;i++){
       const lane = document.createElement('div');
       lane.className = 'path-lane';
       lane.style.top = (i*rowH + rowH/2) + 'px';
       area.appendChild(lane);
-    });
+    }
+    // personagem correndo, fixo no eixo X, troca de pista na vertical
     const char = document.createElement('div');
     char.id = 'pathChar';
     char.className = 'path-char running';
     char.textContent = '🏃';
-    char.style.left = '2%';
+    char.style.left = '38px';
     area.appendChild(char);
 
-    pathChips = chips;
-    pathCorrect = s.correct;
-    pathRowH = rowH;
-    pathLaneIndex = Math.floor(chips.length/2);
-    char.style.top = (pathLaneIndex*rowH + rowH/2 - char.offsetHeight/2) + 'px';
+    runnerLane = Math.floor(rows/2);
+    runnerRows = rows;
+    runnerRowH = rowH;
+    runnerCharX = 38;
+    char.style.top = (runnerLane*rowH + rowH/2 - char.offsetHeight/2) + 'px';
+
+    // as 4 frutas (opções) chegam escalonadas, com 1-2 obstáculos de permeio pra desviar
+    runnerObjects = [];
+    const order = shuffle(chips.map((c,i)=>i));
+    order.forEach((chipIdx,pos)=>{
+      const c = chips[chipIdx];
+      c.classList.add('path-sign','fruit');
+      c.style.top = (chipIdx*rowH + rowH/2 - chipH/2) + 'px';
+      c.style.left = (rect.width + 50 + pos*110) + 'px';
+      c.textContent = '🍎 '+c.textContent;
+      runnerObjects.push({el:c, type:'fruit', lane:chipIdx, x:rect.width+50+pos*110, resolved:false});
+    });
+    const obstacleCount = Math.min(2, rows-1);
+    for(let i=0;i<obstacleCount;i++){
+      const ob = document.createElement('div');
+      ob.className = 'path-obstacle';
+      ob.textContent = '🪨';
+      const lane = Math.floor(Math.random()*rows);
+      const x = rect.width + 50 + (i+0.5)*110 + Math.random()*40;
+      ob.style.left = x+'px';
+      ob.style.top = (lane*rowH + rowH/2 - 13) + 'px';
+      area.appendChild(ob);
+      runnerObjects.push({el:ob, type:'obstacle', lane, x, resolved:false});
+    }
 
     pathKeyHandler = (e)=>{
       if(e.key==='ArrowUp'){ e.preventDefault(); movePathLane(-1); }
       else if(e.key==='ArrowDown'){ e.preventDefault(); movePathLane(1); }
-      else if(e.key==='Enter' || e.key===' '){ e.preventDefault(); confirmPathLane(); }
     };
     window.addEventListener('keydown', pathKeyHandler);
+
+    const speed = 110; // px por segundo
+    let last = performance.now();
+    function tick(now){
+      const dt = (now-last)/1000; last = now;
+      let stop = false;
+      runnerObjects.forEach(o=>{
+        if(o.resolved || stop) return;
+        o.x -= speed*dt;
+        o.el.style.left = o.x+'px';
+        if(o.x <= runnerCharX+22 && o.x >= runnerCharX-22 && o.lane===runnerLane){
+          o.resolved = true; stop = true;
+          if(o.type==='obstacle'){ runnerHitObstacle(); }
+          else { chooseArcade(o.el, decodeURIComponent(o.el.dataset.val), s.correct, 'path'); }
+        } else if(o.x < -80){
+          o.resolved = true; o.el.style.opacity='0';
+        }
+      });
+      if(!stop) arcadeAnimFrame = requestAnimationFrame(tick);
+    }
+    arcadeAnimFrame = requestAnimationFrame(tick);
   }
   // rock: posições já vêm do layout em grade (rock-grid), sem posicionamento absoluto
 
@@ -1346,44 +1385,34 @@ function initArcadeMode(mode, s){
   arcadeTimerId = setTimeout(()=> arcadeTimeout(s), 10000);
 }
 
-/* Modo Caminhos, com controle direcional: setas (ou botões ▲▼) trocam de trilha,
-   e confirmar (Enter/Espaço ou 🦘) manda o personagem correr e pular até a placa escolhida. */
-let pathChips = [], pathCorrect = '', pathLaneIndex = 0, pathRowH = 0, pathKeyHandler = null;
+/* Modo Caminhos: corredor em tempo real — o personagem corre sozinho, você só troca de pista
+   (▲▼ ou setas) pra desviar de obstáculos e capturar a fruta com a resposta certa. */
+let runnerObjects = [], runnerLane = 0, runnerRows = 4, runnerRowH = 0, runnerCharX = 38, pathKeyHandler = null;
 
 function movePathLane(delta){
-  if(state.answered || pathLocked || !pathChips.length) return;
-  pathLaneIndex = Math.max(0, Math.min(pathChips.length-1, pathLaneIndex+delta));
+  if(state.answered) return;
+  runnerLane = Math.max(0, Math.min(runnerRows-1, runnerLane+delta));
   const char = document.getElementById('pathChar');
-  if(char) char.style.top = (pathLaneIndex*pathRowH + pathRowH/2 - char.offsetHeight/2) + 'px';
+  if(char) char.style.top = (runnerLane*runnerRowH + runnerRowH/2 - char.offsetHeight/2) + 'px';
 }
 
-function confirmPathLane(){
-  if(state.answered || pathLocked || !pathChips.length) return;
-  const chip = pathChips[pathLaneIndex];
-  pathChoose(chip, decodeURIComponent(chip.dataset.val), pathCorrect, 'path');
-}
-
-function pathChoose(el, chosen, correct, mode){
-  if(state.answered || pathLocked) return;
-  pathLocked = true;
-  if(arcadeTimerId){ clearTimeout(arcadeTimerId); arcadeTimerId = null; } // pausa o relógio durante a corrida
+function runnerHitObstacle(){
+  if(state.answered) return;
+  state.answered = true;
+  stopArcadeTimers();
   const char = document.getElementById('pathChar');
-  if(!char){ pathLocked=false; chooseArcade(el, chosen, correct, mode); return; }
-  const left = Math.max(2, el.offsetLeft - 46);
-  char.style.left = left+'px';
-  setTimeout(()=>{
-    char.classList.remove('running');
-    char.classList.add('jumping');
-    setTimeout(()=>{ pathLocked=false; chooseArcade(el, chosen, correct, mode); }, 400);
-  }, 650);
+  if(char){ char.classList.add('hit'); }
+  document.querySelectorAll('#arcadeArea .chip').forEach(c=> c.classList.add('disabled'));
+  const fb = document.getElementById('feedbackArea');
+  fb.innerHTML = `<div class="feedback bad">💥 Você bateu num obstáculo!</div>
+    <div class="actions"><button class="btn btn-primary" onclick="gameOver()">Ver resultado</button></div>`;
 }
 
 function stopArcadeTimers(){
   if(arcadeTimerId){ clearTimeout(arcadeTimerId); arcadeTimerId = null; }
   if(arcadeAnimFrame){ cancelAnimationFrame(arcadeAnimFrame); arcadeAnimFrame = null; }
   if(pathKeyHandler){ window.removeEventListener('keydown', pathKeyHandler); pathKeyHandler = null; }
-  pathLocked = false;
-  pathChips = [];
+  runnerObjects = [];
 }
 
 function chooseArcade(el, chosen, correct, mode){
@@ -1433,7 +1462,6 @@ async function advance(){
 function renderReadStage(s){
   panel.innerHTML = `
     ${renderHUD()}
-    ${renderGameScene()}
     <div class="tag read">${s.tag}</div>
     <p class="text-title">${s.title}</p>
     <p class="hint">Toque nas palavras que você já conhece para circulá-las. Depois, escreva em português o que você entendeu do texto.</p>
