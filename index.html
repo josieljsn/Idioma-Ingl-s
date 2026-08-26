@@ -150,6 +150,64 @@ footer{text-align:center;color:#8f8874;font-size:12px;margin-top:20px;}
 .rock-grid{display:flex;flex-wrap:wrap;justify-content:center;align-content:center;padding:24px;min-height:320px;}
 
 .arcade-hint{text-align:center;font-size:12px;color:var(--muted);margin:6px 0 14px;}
+
+/* ===== Mapa do mundo (estilo Super Mario) ===== */
+.world-map{border-radius:16px;padding:14px 10px 6px;margin-top:16px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.4), var(--shadow);position:relative;overflow:hidden;}
+.world-title{text-align:center;font-weight:800;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,.35);margin-bottom:4px;font-size:15px;}
+.world-sub{font-weight:600;opacity:.9;font-size:12px;}
+.wm-svg{width:100%;height:auto;display:block;}
+.wm-char{font-size:26px;filter:drop-shadow(0 3px 3px rgba(0,0,0,.35));animation:wmBob 1.6s ease-in-out infinite;}
+@keyframes wmBob{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(-5px);} }
+
+/* ===== Cena de jogo (personagem correndo + placa da pergunta) ===== */
+.game-scene{position:relative;height:92px;border-radius:12px;overflow:hidden;margin-bottom:14px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.35);}
+.game-clouds{position:absolute;top:8px;left:0;width:220%;height:20px;
+  background-image:radial-gradient(ellipse 22px 10px at 20px 8px, rgba(255,255,255,.85), transparent 70%),
+                    radial-gradient(ellipse 16px 8px at 90px 12px, rgba(255,255,255,.7), transparent 70%),
+                    radial-gradient(ellipse 20px 9px at 170px 6px, rgba(255,255,255,.8), transparent 70%);
+  background-repeat:repeat-x;background-size:220px 20px;animation:cloudDrift 14s linear infinite;}
+@keyframes cloudDrift{ from{transform:translateX(0);} to{transform:translateX(-110px);} }
+.game-ground{position:absolute;bottom:0;left:0;width:220%;height:16px;
+  background-image:repeating-linear-gradient(90deg, rgba(0,0,0,.18) 0 10px, transparent 10px 26px);
+  background-color:rgba(0,0,0,.12);animation:groundScroll .7s linear infinite;}
+@keyframes groundScroll{ from{transform:translateX(0);} to{transform:translateX(-26px);} }
+.game-char{position:absolute;bottom:14px;font-size:28px;transition:left .5s ease;
+  filter:drop-shadow(0 3px 3px rgba(0,0,0,.35));transform-origin:bottom center;
+  animation:charRun .3s steps(2) infinite, charHop 2.2s ease-in-out infinite;}
+@keyframes charRun{ 0%{transform:translateY(0) rotate(-6deg);} 50%{transform:translateY(-6px) rotate(6deg);} 100%{transform:translateY(0) rotate(-6deg);} }
+@keyframes charHop{ 0%,78%,100%{margin-bottom:0;} 88%{margin-bottom:16px;} }
+.game-sign{position:absolute;top:6px;right:10px;font-size:20px;background:#fff;border-radius:8px;padding:4px 7px;
+  box-shadow:var(--shadow);animation:signPop .4s cubic-bezier(.34,1.56,.64,1);}
+@keyframes signPop{ 0%{transform:scale(0) translateY(10px);opacity:0;} 70%{transform:scale(1.15) translateY(0);opacity:1;} 100%{transform:scale(1) translateY(0);} }
+.game-scene-label{position:absolute;bottom:4px;left:8px;font-size:10px;font-weight:700;color:#fff;
+  text-shadow:0 1px 2px rgba(0,0,0,.4);background:rgba(0,0,0,.18);padding:2px 6px;border-radius:99px;}
+
+/* ===== Modo Caminhos: pergunta em cima, 4 trilhas à direita, personagem escolhe correndo/pulando ===== */
+.arcade-mode-path .arcade-area{background:linear-gradient(180deg,#dcecff,#eef6ff);}
+.path-lane{position:absolute;left:12%;right:60px;height:3px;background:repeating-linear-gradient(90deg, rgba(120,110,80,.5) 0 8px, transparent 8px 16px);}
+.chip.path-sign{position:absolute;}
+.path-char{position:absolute;font-size:30px;transition:left .65s cubic-bezier(.4,0,.2,1), top .65s cubic-bezier(.4,0,.2,1);
+  filter:drop-shadow(0 3px 3px rgba(0,0,0,.35));z-index:5;}
+.path-char.running{animation:charRun .22s steps(2) infinite;}
+.path-char.jumping{animation:charJump .4s ease;}
+@keyframes charJump{ 0%{transform:translateY(0) rotate(0);} 45%{transform:translateY(-26px) rotate(-10deg);} 100%{transform:translateY(0) rotate(0);} }
+
+.path-controls{display:flex;align-items:center;justify-content:center;gap:10px;margin:12px 0 4px;}
+.path-btn{border:2px solid var(--card-line);background:#fffdf5;color:var(--ink);border-radius:12px;padding:10px 16px;
+  font-size:18px;font-weight:800;cursor:pointer;box-shadow:var(--shadow);}
+.path-btn:active{transform:scale(.94);}
+.path-btn-jump{font-size:15px;background:var(--gold);border-color:var(--gold);color:#3a2a08;padding:10px 18px;}
+
+/* ===== Grade de seleção de mundos ===== */
+.world-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;}
+.world-card{border-radius:14px;padding:16px 10px;text-align:center;cursor:pointer;box-shadow:var(--shadow);transition:transform .15s;position:relative;}
+.world-card:active{transform:scale(.96);}
+.world-card.locked{cursor:default;filter:grayscale(1) brightness(.75);}
+.world-card-icon{font-size:30px;margin-bottom:4px;}
+.world-card-name{font-weight:800;font-size:14px;color:#20263f;text-shadow:0 1px 2px rgba(255,255,255,.5);}
+.world-card-sub{font-size:11px;color:#2c3350;opacity:.85;margin-top:2px;}
+.world-card-progress{margin-top:8px;font-size:11px;font-weight:700;background:rgba(255,255,255,.7);border-radius:99px;padding:3px 8px;display:inline-block;color:#20263f;}
+@media(max-width:420px){.world-grid{grid-template-columns:1fr 1fr;}}
 </style>
 </head>
 <body>
@@ -794,6 +852,39 @@ PHASES.forEach((ph,pi)=>{
 const TOTAL = stages.length;
 const TOTAL_WORDS = PHASES.reduce((a,p)=>a+p.words.length,0);
 
+/* ===== Mundos temáticos + 10 subfases (checkpoints) por fase, estilo mapa do Super Mario ===== */
+const WORLDS = [
+  {name:"Mundo Grama", icon:"🏡", bg:"linear-gradient(180deg,#8fd3f4 0%,#8fd3f4 55%,#7cc576 55%,#5fae5a 100%)", path:"#c9a25a", node:"#5fae5a", accent:"#2f6b2c"},
+  {name:"Mundo Flores", icon:"🌸", bg:"linear-gradient(180deg,#ffd6ec 0%,#ffd6ec 55%,#f6a6c7 55%,#e587ac 100%)", path:"#d98fb3", node:"#e587ac", accent:"#9c3f66"},
+  {name:"Mundo Céu", icon:"☁️", bg:"linear-gradient(180deg,#bfe3ff 0%,#bfe3ff 60%,#8fc7f2 60%,#5fa3dd 100%)", path:"#ffffff", node:"#5fa3dd", accent:"#2a5c8c"},
+  {name:"Mundo Deserto", icon:"🏜️", bg:"linear-gradient(180deg,#ffe3ad 0%,#ffe3ad 55%,#e8b96b 55%,#c98f45 100%)", path:"#c98f45", node:"#e8b96b", accent:"#7a4e19"},
+  {name:"Mundo Praia", icon:"🌊", bg:"linear-gradient(180deg,#bdeeff 0%,#bdeeff 55%,#7fd2d8 55%,#3fa9b3 100%)", path:"#e8d9a0", node:"#3fa9b3", accent:"#1c5e66"},
+  {name:"Mundo Gelo", icon:"🏔️", bg:"linear-gradient(180deg,#dff1ff 0%,#dff1ff 60%,#aed4ec 60%,#7fb2d6 100%)", path:"#ffffff", node:"#7fb2d6", accent:"#2c5478"}
+];
+
+let subPhaseBounds = []; // [phaseIndex] -> array de 10 {start,end,subIndex}
+PHASES.forEach((ph,pi)=>{
+  const pb = phaseBounds[pi];
+  const total = pb.end - pb.start + 1;
+  const n = 10;
+  const base = Math.floor(total/n), rem = total%n;
+  let cursor = pb.start;
+  const chunks = [];
+  for(let i=0;i<n;i++){
+    const size = base + (i < rem ? 1 : 0);
+    if(size<=0){ chunks.push({start:cursor, end:cursor-1, subIndex:i}); continue; } // subfase vazia (fase com poucos estágios)
+    chunks.push({start:cursor, end:cursor+size-1, subIndex:i});
+    cursor += size;
+  }
+  subPhaseBounds.push(chunks);
+});
+function subPhaseOf(idx){
+  const pb = phaseOf(idx);
+  const chunks = subPhaseBounds[pb.phaseIndex];
+  const sp = chunks.find(c=> idx>=c.start && idx<=c.end) || chunks[chunks.length-1];
+  return {phaseIndex:pb.phaseIndex, subIndex:sp.subIndex, start:sp.start, end:sp.end};
+}
+
 /* ================= STORAGE ================= */
 /* Cache local (mais rápido) — a fonte real de verdade do perfil é o Firestore */
 async function getPersonal(key){ try{ const v = localStorage.getItem('trilha:'+key); return v?JSON.parse(v):null; }catch(e){ return null; } }
@@ -884,30 +975,65 @@ async function renderStart(){
   panel.innerHTML = `<div class="spin">Carregando ranking...</div>`;
   const stats = (await getPersonal('stats')) || {attempts:0,completions:0,bestPhase:0,bestStage:0};
   const board = await loadLeaderboard();
-  const checkpointIdx = getCheckpointIdx(stats);
-  const hasCheckpoint = checkpointIdx > 0;
-  const checkpointPhase = hasCheckpoint ? phaseOf(checkpointIdx).phaseIndex+1 : 0;
+  const reachedIdx = stats.bestStage ? Math.min(stats.bestStage+1, TOTAL-1) : 0;
+  const currentPi = stats.bestStage>0 ? phaseOf(reachedIdx).phaseIndex : 0;
+
+  const worldCards = WORLDS.map((world,pi)=>{
+    const ph = PHASES[pi];
+    const unlocked = pi <= currentPi;
+    const completed = pi < currentPi;
+    const isCurrent = pi === currentPi;
+    let progressTxt = 'Bloqueado 🔒';
+    if(completed) progressTxt = 'Concluído ⭐⭐⭐';
+    else if(isCurrent){
+      const sp = subPhaseOf(Math.max(reachedIdx, phaseBounds[pi].start));
+      progressTxt = `Checkpoint ${sp.subIndex+1}/10`;
+    }
+    return `<div class="world-card ${unlocked?'':'locked'}" style="background:${world.bg};" ${unlocked?`onclick="renderPhaseMap(${pi})"`:''}>
+      <div class="world-card-icon">${unlocked?world.icon:'🔒'}</div>
+      <div class="world-card-name">${world.name}</div>
+      <div class="world-card-sub">${ph.icon} ${ph.name}</div>
+      <div class="world-card-progress">${progressTxt}</div>
+    </div>`;
+  }).join('');
+
   panel.innerHTML = `
     <div class="center">
-      <div class="tag vocab">Modo clássico</div>
-      <h2 style="margin:6px 0 8px;">Olá, ${state.player.name}! Pronta(o) para virar fluente?</h2>
-      <p class="sub" style="margin-bottom:0;">${TOTAL_WORDS} palavras em 6 fases + 10 expressões do cotidiano.<br><b>Errou uma pergunta? Você volta ao início da fase atual, não da trilha inteira.</b> Zere o jogo para aprender todas as palavras. 😅</p>
+      <div class="tag vocab">🗺️ Mapa dos Mundos</div>
+      <h2 style="margin:6px 0 8px;">Olá, ${state.player.name}! Escolha um mundo para jogar.</h2>
+      <p class="sub" style="margin-bottom:0;">${TOTAL_WORDS} palavras em 6 mundos, 10 checkpoints cada.<br>Termine um mundo inteiro pra destravar o próximo. 😅</p>
     </div>
     <div class="stats-row">
-      <div class="stat-card"><b>${stats.bestPhase}/6</b><span>Melhor fase</span></div>
+      <div class="stat-card"><b>${stats.bestPhase}/6</b><span>Melhor mundo</span></div>
       <div class="stat-card"><b>${stats.attempts}</b><span>Tentativas</span></div>
       <div class="stat-card"><b>${stats.completions}</b><span>Trilhas zeradas</span></div>
     </div>
-    ${hasCheckpoint
-      ? `<button class="btn btn-primary btn-block" onclick="startGame(${checkpointIdx})">⏩ Continuar de onde parei (Fase ${checkpointPhase})</button>
-         <button class="btn btn-ghost btn-block" style="margin-top:10px;" onclick="startGame(0)">🔄 Jogar do início</button>`
-      : `<button class="btn btn-primary btn-block" onclick="startGame(0)">▶ Iniciar jogo</button>`
-    }
+    <div class="world-grid">${worldCards}</div>
+    <button class="btn btn-ghost btn-block" style="margin-top:14px;" onclick="startGame(0)">🔄 Recomeçar tudo do início</button>
     <button class="btn btn-ghost btn-block" style="margin-top:10px;" onclick="switchPlayer()">Trocar jogador</button>
     <div class="leaderboard">
       <h3>🏆 Ranking — palavras aprendidas (fase mais avançada)</h3>
       ${board.length? board.map((r,i)=>`<div class="lb-row ${r.name===state.player.name?'me':''}"><span>${i+1}. ${r.name}</span><span><b>${r.wordsLearned}</b> palavras · ${r.bestPhase}/6 fases</span></div>`).join('') : '<div class="lb-empty">Ainda ninguém no ranking. Seja o primeiro!</div>'}
     </div>
+  `;
+}
+
+async function renderPhaseMap(pi){
+  stopArcadeTimers();
+  const stats = (await getPersonal('stats')) || {attempts:0,completions:0,bestPhase:0,bestStage:0};
+  const reachedIdx = stats.bestStage ? Math.min(stats.bestStage+1, TOTAL-1) : 0;
+  const currentPi = stats.bestStage>0 ? phaseOf(reachedIdx).phaseIndex : 0;
+  if(pi > currentPi){ renderStart(); return; } // segurança: mundo ainda bloqueado
+  const world = WORLDS[pi];
+  const ph = PHASES[pi];
+  panel.innerHTML = `
+    <button class="btn btn-ghost" style="margin-bottom:10px;" onclick="renderStart()">← Voltar aos mundos</button>
+    <div class="center">
+      <div class="tag vocab">${world.icon} ${world.name}</div>
+      <h2 style="margin:6px 0 8px;">${ph.icon} ${ph.name}</h2>
+      <p class="sub" style="margin-bottom:0;">Escolha um checkpoint desbloqueado no mapa abaixo.<br><b>Errou uma pergunta?</b> Você volta ao início do checkpoint atual, não do mundo inteiro. 😅</p>
+    </div>
+    ${renderWorldMap(pi, stats)}
   `;
 }
 
@@ -931,12 +1057,80 @@ async function switchPlayer(){
 
 function phaseOf(idx){ return phaseBounds.find(b=> idx>=b.start && idx<=b.end); }
 
-/* Retorna o índice do estágio onde a fase em andamento começa, para permitir continuar sem voltar ao início */
+/* Retorna o índice do estágio onde a SUBFASE em andamento começa (checkpoint mais fino que a fase inteira) */
 function getCheckpointIdx(stats){
   if(!stats || !stats.bestStage || stats.bestStage<=0) return 0;
   const idx = Math.min(stats.bestStage+1, TOTAL-1);
-  const pb = phaseOf(idx);
-  return pb.start;
+  const sp = subPhaseOf(idx);
+  return sp.start;
+}
+
+/* Mapa do mundo estilo Super Mario: 10 checkpoints numerados, personagem no ponto alcançado */
+function renderWorldMap(pi, stats){
+  const world = WORLDS[pi];
+  const ph = PHASES[pi];
+  const chunks = subPhaseBounds[pi];
+  const reachedIdx = stats && stats.bestStage ? Math.min(stats.bestStage+1, TOTAL-1) : 0;
+  const reachedSp = subPhaseOf(Math.max(reachedIdx, phaseBounds[pi].start));
+  const furthestSub = reachedSp.phaseIndex===pi ? reachedSp.subIndex : -1; // -1 = fase ainda não começou
+
+  const W=340, H=460;
+  const nodePos = chunks.map((_,i)=>{
+    const t = i/(chunks.length-1);
+    const x = 40 + (i%2===0 ? 0 : 1)*0 + (Math.sin(t*Math.PI*3)*70) + 100;
+    const y = H - 40 - t*(H-80);
+    return {x,y};
+  });
+  const pathD = nodePos.map((p,i)=> (i===0?'M':'L')+p.x+' '+p.y).join(' ');
+
+  const nodesHtml = chunks.map((c,i)=>{
+    const unlocked = i <= furthestSub || (furthestSub===-1 && i===0);
+    const done = i < furthestSub || (furthestSub===chunks.length-1 && i===furthestSub && stats.completions>0 && pi===PHASES.length-1);
+    const p = nodePos[i];
+    const cls = unlocked ? (done?'wm-node done':'wm-node') : 'wm-node locked';
+    return `<g class="${cls}" ${unlocked?`onclick="startGame(${c.start})"`:''} transform="translate(${p.x},${p.y})">
+      <circle r="19" class="wm-circle"/>
+      <text y="6" text-anchor="middle" class="wm-label">${done?'★':(unlocked?(i+1):'🔒')}</text>
+    </g>`;
+  }).join('');
+
+  const charPos = furthestSub>=0 ? nodePos[Math.min(furthestSub,nodePos.length-1)] : nodePos[0];
+
+  return `
+  <div class="world-map" style="background:${world.bg};">
+    <div class="world-title">${world.icon} ${world.name} <span class="world-sub">— ${ph.icon} ${ph.name}</span></div>
+    <svg viewBox="0 0 ${W} ${H}" class="wm-svg">
+      <path d="${pathD}" fill="none" stroke="${world.path}" stroke-width="8" stroke-linecap="round" stroke-dasharray="2 14"/>
+      ${nodesHtml}
+      <text x="${charPos.x}" y="${charPos.y-30}" text-anchor="middle" class="wm-char">🧑‍🚀</text>
+    </svg>
+  </div>
+  <style>
+    .wm-circle{fill:${world.node};stroke:#fff;stroke-width:3;}
+    .wm-node.locked .wm-circle{fill:#9aa0a6;opacity:.55;}
+    .wm-node.done .wm-circle{fill:${world.accent};}
+    .wm-label{fill:#fff;font-size:14px;font-weight:800;font-family:inherit;}
+    .wm-node{cursor:pointer;}
+    .wm-node.locked{cursor:default;}
+  </style>`;
+}
+
+/* Cena de jogo (topo das perguntas): personagem correndo pelo mundo atual,
+   avançando conforme o progresso dentro do checkpoint, e a "placa" da pergunta surgindo. */
+function renderGameScene(){
+  const sp = subPhaseOf(state.idx);
+  const world = WORLDS[sp.phaseIndex];
+  const span = Math.max(1, sp.end - sp.start);
+  const pct = Math.min(92, Math.max(6, ((state.idx - sp.start) / span) * 86 + 6));
+  return `
+    <div class="game-scene" style="background:${world.bg};">
+      <div class="game-clouds"></div>
+      <div class="game-ground"></div>
+      <div class="game-char" style="left:${pct}%;">${world.icon==='🏔️'?'⛷️':'🏃'}</div>
+      <div class="game-sign">${world.icon}</div>
+      <div class="game-scene-label">${PHASES[sp.phaseIndex].name} · Checkpoint ${sp.subIndex+1}/10</div>
+    </div>
+  `;
 }
 
 function renderHUD(){
@@ -987,9 +1181,10 @@ function renderStage(){
   if(s.kind==='read'){ renderReadStage(s); } else { renderQuestionStage(s); }
 }
 
-const ARCADE_MODES = ['balloon','fall','orbit','rock','zigzag','target'];
+const ARCADE_MODES = ['balloon','fall','orbit','rock','zigzag','target','path'];
 let arcadeTimerId = null;
 let arcadeAnimFrame = null;
+let pathLocked = false;
 
 function renderQuestionStage(s){
   const mode = ARCADE_MODES[Math.floor(Math.random()*ARCADE_MODES.length)];
@@ -999,19 +1194,27 @@ function renderQuestionStage(s){
     orbit:'🌀 As opções giram ao redor — clique na resposta certa a tempo!',
     rock:'🔨 Quebre a pedra com a resposta certa antes que o tempo acabe!',
     zigzag:'↯ As palavras se movem em zigue-zague — clique na certa a tempo!',
-    target:'🎯 Mire e atire no alvo com a resposta certa!'
+    target:'🎯 Mire e atire no alvo com a resposta certa!',
+    path:'🎮 Use ▲ ▼ (ou as setas do teclado) para mudar de trilha e 🦘 Pular (ou Enter) para escolher!'
   };
   const chipsHtml = s.options.map((o,i)=>`<div class="chip chip-${mode}" data-i="${i}" data-val="${encodeURIComponent(o)}">${o}</div>`).join('');
   panel.innerHTML = `
     ${renderHUD()}
+    ${renderGameScene()}
     <div class="tag ${s.kind}">${s.tag}</div>
     <p class="question">${s.question}</p>
-    <div class="arcade-timer"><div class="arcade-timer-fill running" id="timerFill" style="animation-duration:5s;"></div></div>
+    <div class="arcade-timer"><div class="arcade-timer-fill running" id="timerFill" style="animation-duration:10s;"></div></div>
     <div class="arcade-wrap arcade-mode-${mode}">
       <div class="${mode==='rock'?'arcade-area rock-grid':'arcade-area'}" id="arcadeArea">
         ${chipsHtml}
       </div>
     </div>
+    ${mode==='path' ? `
+    <div class="path-controls">
+      <button class="path-btn" onclick="movePathLane(-1)">▲</button>
+      <button class="path-btn path-btn-jump" onclick="confirmPathLane()">🦘 Pular</button>
+      <button class="path-btn" onclick="movePathLane(1)">▼</button>
+    </div>` : ''}
     <p class="arcade-hint">${hints[mode]}</p>
     <div id="feedbackArea"></div>
   `;
@@ -1099,19 +1302,88 @@ function initArcadeMode(mode, s){
   } else if(mode==='target'){
     const slots = slotLayout(chips.length, rect.width, rect.height, 88, 88, 14);
     chips.forEach((c,i)=>{ c.style.left = slots[i].x+'px'; c.style.top = slots[i].y+'px'; });
+  } else if(mode==='path'){
+    const rows = chips.length;
+    const rowH = rect.height/rows;
+    chips.forEach((c,i)=>{
+      c.classList.add('path-sign');
+      c.style.right = '4px'; c.style.left = 'auto';
+      c.style.top = (i*rowH + rowH/2 - chipH/2) + 'px';
+      c.style.cursor = 'default';
+      const lane = document.createElement('div');
+      lane.className = 'path-lane';
+      lane.style.top = (i*rowH + rowH/2) + 'px';
+      area.appendChild(lane);
+    });
+    const char = document.createElement('div');
+    char.id = 'pathChar';
+    char.className = 'path-char running';
+    char.textContent = '🏃';
+    char.style.left = '2%';
+    area.appendChild(char);
+
+    pathChips = chips;
+    pathCorrect = s.correct;
+    pathRowH = rowH;
+    pathLaneIndex = Math.floor(chips.length/2);
+    char.style.top = (pathLaneIndex*rowH + rowH/2 - char.offsetHeight/2) + 'px';
+
+    pathKeyHandler = (e)=>{
+      if(e.key==='ArrowUp'){ e.preventDefault(); movePathLane(-1); }
+      else if(e.key==='ArrowDown'){ e.preventDefault(); movePathLane(1); }
+      else if(e.key==='Enter' || e.key===' '){ e.preventDefault(); confirmPathLane(); }
+    };
+    window.addEventListener('keydown', pathKeyHandler);
   }
   // rock: posições já vêm do layout em grade (rock-grid), sem posicionamento absoluto
 
   chips.forEach(c=>{
-    c.addEventListener('click', ()=> chooseArcade(c, decodeURIComponent(c.dataset.val), s.correct, mode));
+    if(mode!=='path'){
+      c.addEventListener('click', ()=> chooseArcade(c, decodeURIComponent(c.dataset.val), s.correct, mode));
+    }
   });
 
-  arcadeTimerId = setTimeout(()=> arcadeTimeout(s), 5000);
+  arcadeTimerId = setTimeout(()=> arcadeTimeout(s), 10000);
+}
+
+/* Modo Caminhos, com controle direcional: setas (ou botões ▲▼) trocam de trilha,
+   e confirmar (Enter/Espaço ou 🦘) manda o personagem correr e pular até a placa escolhida. */
+let pathChips = [], pathCorrect = '', pathLaneIndex = 0, pathRowH = 0, pathKeyHandler = null;
+
+function movePathLane(delta){
+  if(state.answered || pathLocked || !pathChips.length) return;
+  pathLaneIndex = Math.max(0, Math.min(pathChips.length-1, pathLaneIndex+delta));
+  const char = document.getElementById('pathChar');
+  if(char) char.style.top = (pathLaneIndex*pathRowH + pathRowH/2 - char.offsetHeight/2) + 'px';
+}
+
+function confirmPathLane(){
+  if(state.answered || pathLocked || !pathChips.length) return;
+  const chip = pathChips[pathLaneIndex];
+  pathChoose(chip, decodeURIComponent(chip.dataset.val), pathCorrect, 'path');
+}
+
+function pathChoose(el, chosen, correct, mode){
+  if(state.answered || pathLocked) return;
+  pathLocked = true;
+  if(arcadeTimerId){ clearTimeout(arcadeTimerId); arcadeTimerId = null; } // pausa o relógio durante a corrida
+  const char = document.getElementById('pathChar');
+  if(!char){ pathLocked=false; chooseArcade(el, chosen, correct, mode); return; }
+  const left = Math.max(2, el.offsetLeft - 46);
+  char.style.left = left+'px';
+  setTimeout(()=>{
+    char.classList.remove('running');
+    char.classList.add('jumping');
+    setTimeout(()=>{ pathLocked=false; chooseArcade(el, chosen, correct, mode); }, 400);
+  }, 650);
 }
 
 function stopArcadeTimers(){
   if(arcadeTimerId){ clearTimeout(arcadeTimerId); arcadeTimerId = null; }
   if(arcadeAnimFrame){ cancelAnimationFrame(arcadeAnimFrame); arcadeAnimFrame = null; }
+  if(pathKeyHandler){ window.removeEventListener('keydown', pathKeyHandler); pathKeyHandler = null; }
+  pathLocked = false;
+  pathChips = [];
 }
 
 function chooseArcade(el, chosen, correct, mode){
@@ -1161,6 +1433,7 @@ async function advance(){
 function renderReadStage(s){
   panel.innerHTML = `
     ${renderHUD()}
+    ${renderGameScene()}
     <div class="tag read">${s.tag}</div>
     <p class="text-title">${s.title}</p>
     <p class="hint">Toque nas palavras que você já conhece para circulá-las. Depois, escreva em português o que você entendeu do texto.</p>
@@ -1186,16 +1459,17 @@ async function gameOver(){
   stopArcadeTimers();
   await updateBest();
   const stats = (await getPersonal('stats')) || {attempts:0,completions:0,bestPhase:0,bestStage:0};
-  const pb = phaseOf(state.idx);
+  const sp = subPhaseOf(state.idx);
+  const world = WORLDS[sp.phaseIndex];
   panel.innerHTML = `
     <div class="big-icon">💥</div>
     <p class="result-title">Ops! Você errou.</p>
-    <p class="result-sub">Você chegou até a fase ${pb.phaseIndex+1}/6 (${PHASES[pb.phaseIndex].name}), com ${state.score} pontos.<br>Sem problema — na tela inicial você escolhe entre continuar de onde parou ou recomeçar do zero.</p>
+    <p class="result-sub">Você chegou até o checkpoint ${sp.subIndex+1}/10 do ${world.icon} ${world.name} (${PHASES[sp.phaseIndex].name}), com ${state.score} pontos.<br>Sem problema — no mapa você volta pra esse mesmo checkpoint, não pro início do mundo inteiro.</p>
     <div class="stats-row">
       <div class="stat-card"><b>${stats.bestPhase+1}/6</b><span>Seu recorde</span></div>
       <div class="stat-card"><b>${stats.attempts}</b><span>Tentativas</span></div>
     </div>
-    <button class="btn btn-primary btn-block" onclick="renderStart()">Ver opções</button>
+    <button class="btn btn-primary btn-block" onclick="renderPhaseMap(${sp.phaseIndex})">Ver mapa deste mundo</button>
   `;
 }
 
